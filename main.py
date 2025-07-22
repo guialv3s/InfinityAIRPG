@@ -1,4 +1,4 @@
-from fastapi import FastAPI, Request
+from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
@@ -8,12 +8,7 @@ from openai import OpenAI
 import uvicorn
 import json
 import os
-import sys
 
-#from . import models, database
-
-# ==== Configuração inicial ====
-# models.Base.metadata.create_all(bind=database.engine)
 load_dotenv(dotenv_path='.env')
 OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
 client = OpenAI(api_key=OPENAI_API_KEY)
@@ -26,19 +21,21 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# ==== Caminhos e arquivos ====
+# === Arquivos ===
 BASE_DIR = Path(__file__).resolve().parent
 HISTORY_FILE = BASE_DIR / "history.json"
-CHATADMIN_FILE = BASE_DIR / "chatadmin.json"
+PLAYER_FILE = BASE_DIR / "player.json"
 
-if not HISTORY_FILE.exists():
-    with open(HISTORY_FILE, "w") as f:
-        json.dump([], f)
+# Inicializa arquivos se não existirem
+for file in [HISTORY_FILE, PLAYER_FILE]:
+    if not file.exists():
+        with open(file, "w") as f:
+            json.dump({} if "player" in str(file) else [], f)
 
-# ==== Variáveis de controle ====
-admin_mode = False  # Inicia no modo RPG
+# Variáveis de controle
+admin_mode = False
 
-# ==== Funções utilitárias ====
+# Funções para carregar/salvar histórico
 def load_history():
     with open(HISTORY_FILE, "r") as f:
         return json.load(f)
@@ -51,7 +48,77 @@ def reset_history():
     with open(HISTORY_FILE, "w") as f:
         json.dump([], f)
 
-# ==== Função principal de processamento ====
+# Funções para carregar/salvar player
+def load_player():
+    with open(PLAYER_FILE, "r") as f:
+        try:
+            data = json.load(f)
+            if not data:
+                return None
+            return data
+        except json.JSONDecodeError:
+            return None
+
+def save_player(player_data):
+    with open(PLAYER_FILE, "w") as f:
+        json.dump(player_data, f, indent=4)
+
+# Funções para manipular inventário dentro do player
+def add_item_to_inventory(item_name, quantidade=1):
+    player = load_player()
+    if not player:
+        return False
+    inventario = player.get("inventario", {
+        "ouro": 0,
+        "vida_atual": 10,
+        "vida_maxima": 10,
+        "itens": []
+    })
+    itens = inventario.get("itens", [])
+    for item in itens:
+        if item["item"] == item_name:
+            item["quantidade"] += quantidade
+            break
+    else:
+        itens.append({"item": item_name, "quantidade": quantidade})
+    inventario["itens"] = itens
+    player["inventario"] = inventario
+    save_player(player)
+    return True
+
+def remove_item_from_inventory(item_name, quantidade=1):
+    player = load_player()
+    if not player:
+        return False
+    inventario = player.get("inventario", {
+        "ouro": 0,
+        "vida_atual": 10,
+        "vida_maxima": 10,
+        "itens": []
+    })
+    itens = inventario.get("itens", [])
+    for item in itens:
+        if item["item"] == item_name:
+            item["quantidade"] -= quantidade
+            if item["quantidade"] <= 0:
+                itens.remove(item)
+            break
+    inventario["itens"] = itens
+    player["inventario"] = inventario
+    save_player(player)
+    return True
+
+def get_inventory_text():
+    player = load_player()
+    if not player:
+        return "Nenhum personagem criado."
+    inventario = player.get("inventario", {})
+    itens = inventario.get("itens", [])
+    if not itens:
+        return "Inventário vazio."
+    return "\n".join([f"- {item['item']} (x{item['quantidade']})" for item in itens])
+
+# Processa mensagens
 def process_message(user_message: str) -> str:
     global admin_mode
 
@@ -60,35 +127,45 @@ def process_message(user_message: str) -> str:
 
     if user_message.lower() == "!resetar":
         reset_history()
-        return "Histórico resetado com sucesso. Vamos começar uma nova aventura!"
+        save_player({})
+        return "Histórico e personagem resetados com sucesso. Vamos começar uma nova aventura!"
 
     if user_message.lower() == "!modo_admin":
         admin_mode = True
-        return "Modo ADMIN ativado. Você agora pode conversar livremente com a IA."
+        return "Modo ADMIN ativado."
 
     if user_message.lower() == "!modo_rpg":
         admin_mode = False
-        return "Modo RPG ativado novamente. Retornando ao papel de Mestre do Jogo!"
+        return "Modo RPG ativado."
+
+    if user_message.lower() == "!inventario":
+        return get_inventory_text()
+
+    if user_message.lower() == "!comandos":
+        return "Comandos disponíveis: !resetar, !inventario"
 
     history = load_history()
 
     if not admin_mode:
         if not history:
+            player = load_player()
+            tema = player.get("tema") if player else "um tema de fantasia"
+            modo_jogo = player.get("modo_jogo") if player else "Narrativo"
+
+            system_prompt = (
+                f"Você é um Mestre de Jogo de RPG por texto. O tema é: {tema}. "
+                f"O modo de jogo é: {modo_jogo}. "
+                "Seja criativo, objetivo e claro. Não fale como IA. "
+                "Descreva o mundo, ofereça escolhas, incentive a ação do jogador. "
+                "Use emoteicons de forma moderada. Ignore perguntas fora do RPG. "
+                "Não permita o jogador definir nível. O nível começa em 0. "
+                "O jogador adquire itens e ouro jogando. "
+                "Use as mensagens para registrar progressos."
+            )
+
             history.append({
                 "role": "system",
-                "content": (
-                    "Você é um Mestre de Jogo de RPG por texto. "
-                    "Seja criativo, objetivo e claro. "
-                    "Não fale como IA. "
-                    "Descreva o mundo, ofereça escolhas, e incentive a ação do jogador. "
-                    "Use emoteicons de forma controlada, porém que melhore a interpretação da história. "
-                    "Ignore perguntas fora do RPG, diga que só é um mestre de jogo. "
-                    "Comece perguntando o tema do RPG. "
-                    "Depois, pergunte se o modo será Rolagem de dados (você rola) ou Narrativo. "
-                    "Depois, me retorne uma ficha de criação de personagem com opções relacionadas ao tema. "
-                    "Jogador só adquire itens/habilidades jogando, nunca direto. "
-                    "Caso o jogador peça um resumo, envie um resumo de toda a história ou de momentos recentes, dependendo do que ele solicitar."
-                )
+                "content": system_prompt
             })
 
         history.append({"role": "user", "content": user_message})
@@ -109,20 +186,18 @@ def process_message(user_message: str) -> str:
 
     return assistant_message
 
-# ==== Estrutura da requisição ====
+# API do chat
 class ChatRequest(BaseModel):
     message: str
 
-# ==== Rota principal ====
 @app.post("/chat")
 async def chat(request: ChatRequest):
     try:
         resposta = process_message(request.message)
         return {"response": resposta}
     except Exception as e:
-        print(f"Erro na rota /chat: {str(e)}")  # Substitui o logger
-        return JSONResponse(status_code=500, content={"error": f"Erro interno: {str(e)}"})
+        return JSONResponse(status_code=500, content={"error": str(e)})
 
-# ==== Execução local (opcional) ====
+# Executa localmente
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)
