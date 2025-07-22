@@ -1,0 +1,14 @@
+{
+    "nome": "Guilherme",
+    "classe": "Mago",
+    "tema": "Fantasia com magia etc",
+    "modo": "rolagem",
+    "nivel": 0,
+    "experiencia": 0,
+    "inventario": {
+        "ouro": 0,
+        "vida_atual": 10,
+        "vida_maxima": 10,
+        "itens": []
+    }
+}

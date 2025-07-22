@@ -21,95 +21,48 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# === Arquivos ===
 BASE_DIR = Path(__file__).resolve().parent
-HISTORY_FILE = BASE_DIR / "history.json"
-PLAYER_FILE = BASE_DIR / "player.json"
+(BASE_DIR / "histories").mkdir(exist_ok=True)
+(BASE_DIR / "players").mkdir(exist_ok=True)
 
-# Inicializa arquivos se não existirem
-for file in [HISTORY_FILE, PLAYER_FILE]:
-    if not file.exists():
-        with open(file, "w") as f:
-            json.dump({} if "player" in str(file) else [], f)
+def get_history_file(user_id):
+    return BASE_DIR / "histories" / f"history_{user_id}.json"
 
-# Variáveis de controle
-admin_mode = False
+def get_player_file(user_id):
+    return BASE_DIR / "players" / f"player_{user_id}.json"
 
-# Funções para carregar/salvar histórico
-def load_history():
-    with open(HISTORY_FILE, "r") as f:
-        return json.load(f)
+def load_history(user_id):
+    file = get_history_file(user_id)
+    if file.exists():
+        with open(file, "r") as f:
+            return json.load(f)
+    return []
 
-def save_history(history):
-    with open(HISTORY_FILE, "w") as f:
+def save_history(user_id, history):
+    with open(get_history_file(user_id), "w") as f:
         json.dump(history, f, indent=4)
 
-def reset_history():
-    with open(HISTORY_FILE, "w") as f:
+def reset_history(user_id):
+    with open(get_history_file(user_id), "w") as f:
         json.dump([], f)
 
-# Funções para carregar/salvar player
-def load_player():
-    with open(PLAYER_FILE, "r") as f:
-        try:
-            data = json.load(f)
-            if not data:
+def load_player(user_id):
+    file = get_player_file(user_id)
+    if file.exists():
+        with open(file, "r") as f:
+            try:
+                data = json.load(f)
+                return data if data else None
+            except json.JSONDecodeError:
                 return None
-            return data
-        except json.JSONDecodeError:
-            return None
+    return None
 
-def save_player(player_data):
-    with open(PLAYER_FILE, "w") as f:
+def save_player(user_id, player_data):
+    with open(get_player_file(user_id), "w") as f:
         json.dump(player_data, f, indent=4)
 
-# Funções para manipular inventário dentro do player
-def add_item_to_inventory(item_name, quantidade=1):
-    player = load_player()
-    if not player:
-        return False
-    inventario = player.get("inventario", {
-        "ouro": 0,
-        "vida_atual": 10,
-        "vida_maxima": 10,
-        "itens": []
-    })
-    itens = inventario.get("itens", [])
-    for item in itens:
-        if item["item"] == item_name:
-            item["quantidade"] += quantidade
-            break
-    else:
-        itens.append({"item": item_name, "quantidade": quantidade})
-    inventario["itens"] = itens
-    player["inventario"] = inventario
-    save_player(player)
-    return True
-
-def remove_item_from_inventory(item_name, quantidade=1):
-    player = load_player()
-    if not player:
-        return False
-    inventario = player.get("inventario", {
-        "ouro": 0,
-        "vida_atual": 10,
-        "vida_maxima": 10,
-        "itens": []
-    })
-    itens = inventario.get("itens", [])
-    for item in itens:
-        if item["item"] == item_name:
-            item["quantidade"] -= quantidade
-            if item["quantidade"] <= 0:
-                itens.remove(item)
-            break
-    inventario["itens"] = itens
-    player["inventario"] = inventario
-    save_player(player)
-    return True
-
-def get_inventory_text():
-    player = load_player()
+def get_inventory_text(user_id):
+    player = load_player(user_id)
     if not player:
         return "Nenhum personagem criado."
     inventario = player.get("inventario", {})
@@ -118,86 +71,64 @@ def get_inventory_text():
         return "Inventário vazio."
     return "\n".join([f"- {item['item']} (x{item['quantidade']})" for item in itens])
 
-# Processa mensagens
-def process_message(user_message: str) -> str:
-    global admin_mode
-
+def process_message(user_message: str, user_id: int) -> str:
     if not user_message.strip():
         return "Mensagem vazia."
 
     if user_message.lower() == "!resetar":
-        reset_history()
-        save_player({})
-        return "Histórico e personagem resetados com sucesso. Vamos começar uma nova aventura!"
-
-    if user_message.lower() == "!modo_admin":
-        admin_mode = True
-        return "Modo ADMIN ativado."
-
-    if user_message.lower() == "!modo_rpg":
-        admin_mode = False
-        return "Modo RPG ativado."
+        reset_history(user_id)
+        save_player(user_id, {})
+        return "Histórico e personagem resetados. Vamos começar uma nova aventura!"
 
     if user_message.lower() == "!inventario":
-        return get_inventory_text()
-
+        return get_inventory_text(user_id)
+    
     if user_message.lower() == "!comandos":
-        return "Comandos disponíveis: !resetar, !inventario"
+        return "Comandos disponíveis: !resetar, !inventario, !comandos"
 
-    history = load_history()
+    history = load_history(user_id)
+    player = load_player(user_id)
 
-    if not admin_mode:
-        if not history:
-            player = load_player()
-            tema = player.get("tema") if player else "um tema de fantasia"
-            modo_jogo = player.get("modo_jogo") if player else "Narrativo"
+    if not history:
+        system_prompt = (
+            "Você é um Mestre de Jogo de RPG por texto. Seja criativo, objetivo e claro. "
+            "Não fale como IA. Descreva o mundo, ofereça escolhas, incentive a ação do jogador. "
+            "Use emoteicons de forma moderada. Ignore perguntas fora do RPG. "
+            "Não permita o jogador definir nível. O nível começa em 0. "
+            "O jogador adquire itens e ouro jogando. "
+        )
+        if player:
+            system_prompt += f"O tema escolhido foi '{player.get('tema')}' e o modo de jogo é '{player.get('modo')}'."
 
-            system_prompt = (
-                f"Você é um Mestre de Jogo de RPG por texto. O tema é: {tema}. "
-                f"O modo de jogo é: {modo_jogo}. "
-                "Seja criativo, objetivo e claro. Não fale como IA. "
-                "Descreva o mundo, ofereça escolhas, incentive a ação do jogador. "
-                "Use emoteicons de forma moderada. Ignore perguntas fora do RPG. "
-                "Não permita o jogador definir nível. O nível começa em 0. "
-                "O jogador adquire itens e ouro jogando. "
-                "Use as mensagens para registrar progressos."
-            )
+        history.append({
+            "role": "system",
+            "content": system_prompt
+        })
 
-            history.append({
-                "role": "system",
-                "content": system_prompt
-            })
-
-        history.append({"role": "user", "content": user_message})
-        messages = history
-    else:
-        messages = [{"role": "user", "content": user_message}]
+    history.append({"role": "user", "content": user_message})
 
     response = client.chat.completions.create(
         model="gpt-4o-mini",
-        messages=messages
+        messages=history
     )
 
     assistant_message = response.choices[0].message.content
-
-    if not admin_mode:
-        history.append({"role": "assistant", "content": assistant_message})
-        save_history(history)
+    history.append({"role": "assistant", "content": assistant_message})
+    save_history(user_id, history)
 
     return assistant_message
 
-# API do chat
 class ChatRequest(BaseModel):
     message: str
+    user_id: int
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
     try:
-        resposta = process_message(request.message)
+        resposta = process_message(request.message, request.user_id)
         return {"response": resposta}
     except Exception as e:
         return JSONResponse(status_code=500, content={"error": str(e)})
 
-# Executa localmente
 if __name__ == "__main__":
     uvicorn.run(app, host="0.0.0.0", port=8000)

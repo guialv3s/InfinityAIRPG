@@ -1,74 +1,105 @@
 import os
+import requests
 from dotenv import load_dotenv
 from telegram import Update, ForceReply
 from telegram.ext import (
-    ApplicationBuilder,
-    CommandHandler,
-    MessageHandler,
-    ContextTypes,
-    filters,
-    ConversationHandler,
+    ApplicationBuilder, CommandHandler, MessageHandler,
+    ContextTypes, filters, ConversationHandler,
+    PicklePersistence
 )
-from main import process_message, save_player, load_player, reset_history, get_inventory_text
+from main import save_player, load_player, reset_history, get_inventory_text
 
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+API_URL = "http://localhost:8000/chat"
 
 ASK_NAME, ASK_CLASS, ASK_THEME, ASK_MODE, GAME = range(5)
 
-# /start inicia cadastro
+# /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    existing_player = load_player(user_id)
+    if existing_player:
+        await update.message.reply_text(
+            "Seu personagem já foi criado. Envie /continuar para continuar sua aventura, ou /resetar para reiniciar."
+        )
+        return ConversationHandler.END
+
     await update.message.reply_text(
-        "Olá! Vamos criar seu personagem. Qual será o nome dele?", reply_markup=ForceReply()
+        "Bem vindo ao Infinity AI - RPG! Qual será o nome do seu personagem?", reply_markup=ForceReply()
     )
     return ASK_NAME
 
+# /continuar
+async def continuar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    chat_id = update.effective_chat.id
+    existing_player = load_player(user_id)
+
+    if existing_player:
+        context.user_data["nome"] = existing_player.get("nome")
+
+        # CORREÇÃO: Define explicitamente o estado da conversa persistente
+        if "rpg_conversation" not in context._conversation_data:
+            context._conversation_data["rpg_conversation"] = {}
+        context._conversation_data["rpg_conversation"][chat_id] = GAME
+
+        await update.message.reply_text(
+            f"Bem-vindo de volta, {existing_player['nome']}!\n"
+            f"Envie qualquer mensagem para continuar sua aventura."
+        )
+        return GAME
+    else:
+        await update.message.reply_text(
+            "Nenhum personagem encontrado. Envie /start para criar um novo personagem."
+        )
+        return ConversationHandler.END
+
+
+# /resetar
+async def resetar(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    chat_id = update.effective_chat.id
+
+    # Apaga dados do jogador salvo
+    reset_history(user_id)
+    save_player(user_id, {})
+    return "Histórico e personagem resetados. Vamos começar uma nova aventura!"
+
+    # Limpa user_data e estado de conversa específico
+    context.user_data.clear()
+
+    if "rpg_conversation" in context._conversation_data:
+        context._conversation_data["rpg_conversation"].pop(chat_id, None)
+
+    await update.message.reply_text("Seu progresso foi resetado. Envie /start para começar novamente.")
+    return ConversationHandler.END
+
+# Etapas de criação
 async def ask_name(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    name = update.message.text.strip()
-    context.user_data["nome"] = name
-    await update.message.reply_text(
-        f"Nome definido como {name}. Agora, diga qual será a classe do personagem.",
-        reply_markup=ForceReply(),
-    )
+    context.user_data["nome"] = update.message.text.strip()
+    await update.message.reply_text("Agora, qual será a classe do seu personagem?", reply_markup=ForceReply())
     return ASK_CLASS
 
 async def ask_class(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    classe = update.message.text.strip()
-    context.user_data["classe"] = classe.capitalize()
-    await update.message.reply_text(
-        "Agora, qual será o tema do RPG? (ex: Apocalipse zumbi, Fantasia medieval, etc)",
-        reply_markup=ForceReply(),
-    )
+    context.user_data["classe"] = update.message.text.strip()
+    await update.message.reply_text("Qual será o tema do RPG?", reply_markup=ForceReply())
     return ASK_THEME
 
 async def ask_theme(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    tema = update.message.text.strip()
-    context.user_data["tema"] = tema
-    await update.message.reply_text(
-        "Qual será o modo de jogo? Responda com 'Rolagem' para rolagem de dados ou 'Narrativa' para modo narrativo.",
-        reply_markup=ForceReply(),
-    )
+    context.user_data["tema"] = update.message.text.strip()
+    await update.message.reply_text("Por fim, o modo será 'rolagem' ou 'narrativo'?", reply_markup=ForceReply())
     return ASK_MODE
 
 async def ask_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    modo = update.message.text.strip().lower()
-    if modo not in ["rolagem", "narrativa"]:
-        await update.message.reply_text(
-            "Modo inválido. Por favor, responda com 'Rolagem' ou 'Narrativa'.",
-            reply_markup=ForceReply(),
-        )
-        return ASK_MODE
-
-    nome = context.user_data.get("nome")
-    classe = context.user_data.get("classe")
-    tema = context.user_data.get("tema")
-    modo_jogo = modo.capitalize()
+    user_id = update.effective_user.id
+    context.user_data["modo"] = update.message.text.strip()
 
     player = {
-        "nome": nome,
-        "classe": classe,
-        "tema": tema,
-        "modo_jogo": modo_jogo,
+        "nome": context.user_data["nome"],
+        "classe": context.user_data["classe"].capitalize(),
+        "tema": context.user_data["tema"],
+        "modo": context.user_data["modo"].lower(),
         "nivel": 0,
         "experiencia": 0,
         "inventario": {
@@ -79,86 +110,106 @@ async def ask_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
         },
     }
 
-    save_player(player)
+    save_player(user_id, player)
+
     await update.message.reply_text(
-        f"✅ Personagem {nome} criado!\nClasse: {classe}\nTema: {tema}\nModo de jogo: {modo_jogo}\n\nEnvie uma mensagem para começar sua aventura."
+        f"✅ Personagem {player['nome']} ({player['classe']}) criado!\n"
+        f"Tema: {player['tema']}\nModo: {player['modo'].capitalize()}\n"
+        "Envie qualquer mensagem para começar sua aventura!\n"
+        "Use !comandos para ver todos os comandos disponíveis."
     )
     return GAME
 
-# Manipulador de mensagens no estado de jogo
+# Durante o jogo
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
     user_message = update.message.text.strip()
-    player = load_player()
+    player = load_player(user_id)
 
-    # Se personagem NÃO existe, avise para mandar /start
     if not player:
         await update.message.reply_text(
-            "Bem vindo ao Infinity AI - RPG!, por favor envie o comando /start para criar seu personagem."
+            "Você ainda não criou um personagem. Envie /start para começar ou /continuar se já criou."
         )
         return
 
-    # Se mensagem é o comando resetar, execute reset e force nova criação
-    if user_message.lower() == "!resetar":
-        reset_history()
-        save_player({})
-        context.user_data.clear()  # Limpa dados da conversa para reiniciar fluxo
-
+    if user_message.lower() in ("!resetar", "/resetar"):
+        await resetar(update, context)
         await update.message.reply_text(
-            "Histórico e personagem resetados. Vamos começar uma nova aventura!"
-        )
-        await update.message.reply_text(
-            "Por favor, diga o nome do seu personagem.", reply_markup=ForceReply()
+            "Seu progresso foi resetado. Qual será o nome do seu novo personagem?."
         )
         return ASK_NAME
 
-    try:
-        # Comando para mostrar inventário
-        if user_message.lower() == "/inventario":
-            texto = get_inventory_text()
-            await update.message.reply_text(f"👜 Seu inventário:\n{texto}")
-            return
+    if user_message.lower() in ("!comandos", "/comandos"):
+        await update.message.reply_text("Comandos disponíveis:\n!resetar\n!inventario\n!comandos")
+        return
 
-        reply = process_message(user_message)
-        await update.message.reply_text(reply)
+    if user_message.lower() in ("!inventario", "/inventario"):
+        texto = get_inventory_text(user_id)
+        await update.message.reply_text(f"👜 Seu inventário:\n{texto}")
+        return
+
+    try:
+        response = requests.post(API_URL, json={"message": user_message, "user_id": user_id})
+        if response.ok:
+            reply = response.json()["response"]
+            await update.message.reply_text(reply)
+        else:
+            await update.message.reply_text(f"Erro na API: {response.text}")
     except Exception as e:
         await update.message.reply_text(f"Erro: {str(e)}")
 
-# Handler para mensagens fora de contexto ou estados
-async def unknown_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
-    player = load_player()
-    if not player:
+# Mensagens fora do fluxo
+async def fallback_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.effective_user.id
+    player = load_player(user_id)
+
+    if player:
         await update.message.reply_text(
-            "Bem vindo ao Infinity AI - RPG!, por favor envie o comando /start para criar seu personagem."
+            "Devido a uma ATUALIZAÇÃO/MANUTENÇÃO do nosso sistema, será necessário enviar /continuar para continuar sua aventura, ou /resetar para reiniciar seu personagem."
         )
     else:
-        # Caso queira, pode responder algo padrão aqui ou ignorar
         await update.message.reply_text(
-            "Bem vindo ao Infinity AI - RPG!, por favor envie o comando /start para criar seu personagem."
+            "Bem Vindo ao Infinity AI - RPG! Para começar sua aventura, envie o comando /start."
         )
 
+# MAIN
 def main():
-    app = ApplicationBuilder().token(TELEGRAM_TOKEN).build()
+    # Ativa persistência em disco
+    persistence = PicklePersistence(filepath="bot_data.pkl")
 
+    # Inicializa o app com persistência
+    app = ApplicationBuilder().token(TELEGRAM_TOKEN).persistence(persistence).build()
+
+    # Conversa principal com persistência
     conv_handler = ConversationHandler(
+        name="rpg_conversation",
+        persistent=True,
         entry_points=[CommandHandler("start", start)],
         states={
             ASK_NAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_name)],
             ASK_CLASS: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_class)],
             ASK_THEME: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_theme)],
             ASK_MODE: [MessageHandler(filters.TEXT & ~filters.COMMAND, ask_mode)],
-            GAME: [MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message)],
+            GAME: [
+                MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message),
+                CommandHandler("resetar", resetar),
+                CommandHandler("continuar", continuar),
+            ],
         },
-        fallbacks=[],
+        fallbacks=[
+            CommandHandler("continuar", continuar),
+            CommandHandler("resetar", resetar),
+        ],
         allow_reentry=True,
     )
 
+    # Handlers adicionados globalmente (garantem funcionamento fora do fluxo)
     app.add_handler(conv_handler)
-    app.add_handler(CommandHandler("inventario", handle_message))
+    app.add_handler(CommandHandler("continuar", continuar))
+    app.add_handler(CommandHandler("resetar", resetar))
+    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, fallback_message))
 
-    # Handler para mensagens fora do ConversationHandler (fora do fluxo)
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, unknown_message))
-
-    print("🤖 Bot do Telegram iniciado!")
+    print("🤖 Bot do Telegram iniciado com persistência!")
     app.run_polling()
 
 if __name__ == "__main__":
