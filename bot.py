@@ -88,7 +88,7 @@ async def ask_class(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 async def ask_theme(update: Update, context: ContextTypes.DEFAULT_TYPE):
     context.user_data["tema"] = update.message.text.strip()
-    await update.message.reply_text("Por fim, o modo será 'rolagem' ou 'narrativo'?", reply_markup=ForceReply())
+    await update.message.reply_text("Por fim, o modo será 'Rolagem de dados' ou 'Narrativo'?", reply_markup=ForceReply())
     return ASK_MODE
 
 async def ask_mode(update: Update, context: ContextTypes.DEFAULT_TYPE):
