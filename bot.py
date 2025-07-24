@@ -7,7 +7,8 @@ from telegram.ext import (
     ContextTypes, filters, ConversationHandler,
     PicklePersistence
 )
-from main import save_player, load_player, reset_history, get_inventory_text
+from player import save_player, load_player, get_inventory_text, get_full_status_text
+from storage import reset_history
 
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -131,6 +132,12 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
             "Você ainda não criou um personagem. Envie /start para começar ou /continuar se já criou."
         )
         return
+    
+    if user_message.lower() in ("!status", "/status"):
+        status_text = get_full_status_text(user_id)
+        await update.message.reply_text(status_text)
+        return
+
 
     if user_message.lower() in ("!resetar", "/resetar"):
         await resetar(update, context)
