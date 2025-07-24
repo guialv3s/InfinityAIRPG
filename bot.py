@@ -7,7 +7,7 @@ from telegram.ext import (
     ContextTypes, filters, ConversationHandler,
     PicklePersistence
 )
-from player import save_player, load_player, get_inventory_text, get_full_status_text
+from player import save_player, load_player, get_inventory_text, get_full_status_text, interpretar_e_atualizar_estado
 from storage import reset_history
 
 load_dotenv()
@@ -138,7 +138,6 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await update.message.reply_text(status_text)
         return
 
-
     if user_message.lower() in ("!resetar", "/resetar"):
         await resetar(update, context)
         await update.message.reply_text(
@@ -159,11 +158,20 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         response = requests.post(API_URL, json={"message": user_message, "user_id": user_id})
         if response.ok:
             reply = response.json()["response"]
+            
+            # Envia a resposta normal da API
             await update.message.reply_text(reply)
+
+            # Atualiza estado e captura mensagem de level-up
+            msg_levelup = interpretar_e_atualizar_estado(reply, user_id)
+            if msg_levelup:
+                await update.message.reply_text(msg_levelup)
+                
         else:
             await update.message.reply_text(f"Erro na API: {response.text}")
     except Exception as e:
         await update.message.reply_text(f"Erro: {str(e)}")
+
 
 # Mensagens fora do fluxo
 async def fallback_message(update: Update, context: ContextTypes.DEFAULT_TYPE):

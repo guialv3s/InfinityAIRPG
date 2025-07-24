@@ -1,0 +1,41 @@
+{
+    "nome": "ArTT",
+    "classe": "Mago",
+    "tema": "Fantasia",
+    "modo": "rolagem de dados",
+    "nivel": 0,
+    "experiencia": 0,
+    "inventario": {
+        "ouro": 30,
+        "vida_atual": 100,
+        "vida_maxima": 100,
+        "itens": [
+            {
+                "item": "Po\u00e7\u00e3o de Cura",
+                "quantidade": 2
+            },
+            {
+                "item": "Bast\u00e3o de Carvalho",
+                "quantidade": 1
+            }
+        ],
+        "mana_atual": 50,
+        "mana_maxima": 50
+    },
+    "atributos": {
+        "forca": 8,
+        "destreza": 10,
+        "constituicao": 10,
+        "inteligencia": 14,
+        "sabedoria": 12,
+        "carisma": 9
+    },
+    "magias": [
+        {
+            "nome": "Bola de Fogo",
+            "custo_mana": 10,
+            "descricao": "Lan\u00e7a uma explos\u00e3o flamejante."
+        }
+    ],
+    "status": []
+}
