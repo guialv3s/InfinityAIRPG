@@ -7,8 +7,8 @@ from telegram.ext import (
     ContextTypes, filters, ConversationHandler,
     PicklePersistence
 )
-from player import save_player, load_player, get_inventory_text, get_full_status_text, interpretar_e_atualizar_estado
-from storage import reset_history
+from src.core.player import save_player, load_player, get_inventory_text, get_full_status_text, interpretar_e_atualizar_estado
+from src.core.storage import reset_history
 
 load_dotenv()
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
@@ -224,7 +224,7 @@ def main():
     app.add_handler(CommandHandler("resetar", resetar))
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, fallback_message))
 
-    print("🤖 Bot do Telegram iniciado com persistência!")
+    print("[BOT] Bot do Telegram iniciado com persistência!")
     app.run_polling()
 
 if __name__ == "__main__":

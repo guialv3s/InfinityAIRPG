@@ -1,0 +1,26 @@
+{
+  "1": {
+    "username": "artt",
+    "email": "alboficial1@gmail.com",
+    "password_hash": "$2b$12$ad0/igiWoTDoygVYty2BVej5Q8XLGJ9vEvpv8uEyO36MfBMYI6fUa",
+    "created_at": "2026-01-20T06:16:07.760191"
+  },
+  "2": {
+    "username": "artt2",
+    "email": "alboficiaal1@gmail.com",
+    "password_hash": "$2b$12$KvMdzt7c.KYwPCozq3UYB.2MPq/B1T2L/GqhddVvTFf1TLEJa60We",
+    "created_at": "2026-01-20T07:42:18.104692"
+  },
+  "3": {
+    "username": "artt4",
+    "email": "alboficqial1@gmail.com",
+    "password_hash": "$2b$12$ES5OAjAe0dKvhPjABv3h3uo77.zi.H/zU7I9cIHj1APkdP.kKFpJ.",
+    "created_at": "2026-01-20T07:44:46.701275"
+  },
+  "4": {
+    "username": "Guilherme",
+    "email": "admtester@gmail.com",
+    "password_hash": "$2b$12$GDqUt/2YSi5ih79otYHqSep6Cztc/fPca9qOiFrgm8TNlTjo5aChy",
+    "created_at": "2026-01-20T11:17:29.024135"
+  }
+}
