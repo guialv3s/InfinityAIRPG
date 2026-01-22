@@ -1,0 +1,94 @@
+{
+    "nome": "Guilherme",
+    "raca": "Humano",
+    "classe": "Policial",
+    "tema": "zombie apocalipse",
+    "modo": "dnd5e",
+    "historia": "Militar da aeronautica.",
+    "nivel": 1,
+    "experiencia": 0,
+    "atributos": {
+        "forca": 14,
+        "destreza": 14,
+        "constituicao": 14,
+        "inteligencia": 12,
+        "sabedoria": 14,
+        "carisma": 13
+    },
+    "inventario": {
+        "ouro": 25,
+        "vida_atual": 46,
+        "vida_maxima": 46,
+        "mana_atual": 28,
+        "mana_maxima": 28,
+        "itens": [
+            {
+                "nome": "Pistola de servi\u00e7o (9mm)",
+                "quantidade": 1,
+                "descricao": "Semiautom\u00e1tica padr\u00e3o da Aeron\u00e1utica. Dois carregadores inclusos (12 proj\u00e9teis cada). Condi\u00e7\u00e3o: boa."
+            },
+            {
+                "nome": "Muni\u00e7\u00e3o 9mm (solta)",
+                "quantidade": 30,
+                "descricao": "Muni\u00e7\u00e3o extra para a pistola; pode recarregar v\u00e1rios carregadores."
+            },
+            {
+                "nome": "Colete bal\u00edstico leve",
+                "quantidade": 1,
+                "descricao": "Reduz dano de proj\u00e9teis e perfura\u00e7\u00f5es; essencial em confrontos com infectados e saqueadores."
+            },
+            {
+                "nome": "Cassetete t\u00e1tico",
+                "quantidade": 1,
+                "descricao": "Arma corpo a corpo n\u00e3o letal \u00fatil para controle e empurr\u00f5es em ambientes fechados."
+            },
+            {
+                "nome": "R\u00e1dio militar port\u00e1til",
+                "quantidade": 1,
+                "descricao": "Comunica\u00e7\u00e3o em VHF/UHF com bateria recarreg\u00e1vel. Frequ\u00eancia da base e canais padr\u00e3o da Aeron\u00e1utica programados."
+            },
+            {
+                "nome": "Kit de primeiros socorros (completo)",
+                "quantidade": 2,
+                "descricao": "Bandagens, antiss\u00e9pticos, analg\u00e9sicos e suturas b\u00e1sicas. Cura ferimentos leves a moderados."
+            },
+            {
+                "nome": "Lanterna t\u00e1tica + 3 pilhas",
+                "quantidade": 1,
+                "descricao": "LED de alto brilho com foco ajust\u00e1vel; \u00fatil para buscas noturnas e t\u00e1ticas."
+            },
+            {
+                "nome": "Canivete multifun\u00e7\u00e3o",
+                "quantidade": 1,
+                "descricao": "Ferramenta compacta com l\u00e2mina, alicate e serra pequena \u2014 \u00fatil para reparos e improvisos."
+            },
+            {
+                "nome": "Kit de ferramentas b\u00e1sicas (aeron\u00e1utica)",
+                "quantidade": 1,
+                "descricao": "Chaves, alicates e ferramentas para manuten\u00e7\u00e3o; permite abrir portas, reparar ve\u00edculos e improvisar barricadas."
+            },
+            {
+                "nome": "Ra\u00e7\u00f5es militares (MLT)",
+                "quantidade": 3,
+                "descricao": "Refei\u00e7\u00f5es prontas para consumo. Cada unidade sustenta por um dia."
+            },
+            {
+                "nome": "M\u00e1scara filtrante (respirat\u00f3ria)",
+                "quantidade": 1,
+                "descricao": "Prote\u00e7\u00e3o contra fuma\u00e7a e part\u00edculas biol\u00f3gicas; essencial em \u00e1reas contaminadas."
+            },
+            {
+                "nome": "Crach\u00e1 da Aeron\u00e1utica",
+                "quantidade": 1,
+                "descricao": "Identifica\u00e7\u00e3o militar que pode abrir portas e evitar confrontos com aliados; \u00fatil para intimida\u00e7\u00e3o ou negocia\u00e7\u00e3o."
+            },
+            {
+                "nome": "Sinalizador (flare)",
+                "quantidade": 2,
+                "descricao": "Sinaliza\u00e7\u00e3o ativa para chamar aten\u00e7\u00e3o ou distrair hordas por curto per\u00edodo."
+            }
+        ]
+    },
+    "magias": [],
+    "status": []
+}

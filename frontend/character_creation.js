@@ -12,12 +12,12 @@ const RACES = {
 };
 
 const ATTRIBUTES = [
-    { id: "for", name: "Força" },
-    { id: "des", name: "Destreza" },
-    { id: "con", name: "Constituição" },
-    { id: "int", name: "Inteligência" },
-    { id: "sab", name: "Sabedoria" },
-    { id: "car", name: "Carisma" }
+    { id: "for", name: "Força", desc: "Poder físico, capacidade de combate corpo a corpo, carregar peso e atletismo." },
+    { id: "des", name: "Destreza", desc: "Agilidade, reflexos, precisão com armas à distância e furtividade." },
+    { id: "con", name: "Constituição", desc: "Resistência, pontos de vida, stamina e imunidade a doenças." },
+    { id: "int", name: "Inteligência", desc: "Raciocínio lógico, conhecimento arcano, memória e investigação." },
+    { id: "sab", name: "Sabedoria", desc: "Percepção, intuição, conexão com a natureza e magias divinas." },
+    { id: "car", name: "Carisma", desc: "Presença, persuasão, liderança e magias baseadas em força de vontade." }
 ];
 
 const STANDARD_ARRAY = [15, 14, 13, 12, 10, 8];
@@ -156,7 +156,10 @@ function renderPointBuy() {
 
         row.innerHTML = `
             <div>
-                <div style="font-weight: bold; font-size: 0.9rem;">${attr.name}</div>
+                <div style="font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 4px;">
+                    ${attr.name} 
+                    <span class="attr-info-icon" data-tooltip="${attr.desc}">ⓘ</span>
+                </div>
                 <div style="font-size: 0.8rem; color: #aaa;">Base: ${val} | Bonus: +${raceBonus}</div>
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -219,7 +222,10 @@ function renderStandardArray() {
 
         row.innerHTML = `
             <div>
-                <div style="font-weight: bold; font-size: 0.9rem;">${attr.name}</div>
+                <div style="font-weight: bold; font-size: 0.9rem; display: flex; align-items: center; gap: 4px;">
+                    ${attr.name}
+                    <span class="attr-info-icon" data-tooltip="${attr.desc}">ⓘ</span>
+                </div>
                 <div style="font-size: 0.8rem; color: #aaa;">Bonus: +${raceBonus}</div>
             </div>
             <div style="display: flex; align-items: center; gap: 10px;">
@@ -252,6 +258,80 @@ window.getCharacterData = function () {
     const mode = document.getElementById('char-mode-select').value;
     const backstory = document.getElementById('char-backstory').value;
     const method = document.getElementById('attr-method').value;
+
+    // Validate basic fields first
+    console.log('Validating Name:', name);
+    if (!name || name.trim() === '') {
+        const basicTab = document.querySelector('[data-tab="tab-basic"]');
+        if (basicTab) basicTab.click();
+        const nameField = document.getElementById('char-name');
+        nameField.style.border = '2px solid #ff4d4d';
+        nameField.style.animation = 'shake 0.5s, flash-red 1.5s';
+        nameField.focus();
+        showValidationToast('ℹ️', 'Por favor, preencha o Nome do Personagem.');
+        setTimeout(() => {
+            nameField.style.animation = '';
+            nameField.style.border = '';
+        }, 1500);
+        return null;
+    }
+
+    if (!charClass || charClass.trim() === '') {
+        const basicTab = document.querySelector('[data-tab="tab-basic"]');
+        if (basicTab) basicTab.click();
+        const classField = document.getElementById('char-class');
+        classField.style.border = '2px solid #ff4d4d';
+        classField.style.animation = 'shake 0.5s, flash-red 1.5s';
+        classField.focus();
+        showValidationToast('ℹ️', 'Por favor, preencha a Classe do Personagem.');
+        setTimeout(() => {
+            classField.style.animation = '';
+            classField.style.border = '';
+        }, 1500);
+        return null;
+    }
+
+    if (!theme || theme.trim() === '') {
+        const basicTab = document.querySelector('[data-tab="tab-basic"]');
+        if (basicTab) basicTab.click();
+        const themeField = document.getElementById('char-theme');
+        themeField.style.border = '2px solid #ff4d4d';
+        themeField.style.animation = 'shake 0.5s, flash-red 1.5s';
+        themeField.focus();
+        showValidationToast('ℹ️', 'Por favor, preencha o Tema da Campanha.');
+        setTimeout(() => {
+            themeField.style.animation = '';
+            themeField.style.border = '';
+        }, 1500);
+        return null;
+    }
+
+    // Validate backstory field
+    if (!backstory || backstory.trim() === '') {
+        // Switch to story tab
+        const storyTab = document.querySelector('[data-tab="tab-story"]');
+        if (storyTab) storyTab.click();
+
+        // Get backstory textarea
+        const backstoryField = document.getElementById('char-backstory');
+
+        // Add red flash animation
+        backstoryField.style.border = '2px solid #ff4d4d';
+        backstoryField.style.animation = 'shake 0.5s, flash-red 1.5s';
+
+        // Focus the field
+        backstoryField.focus();
+
+        showValidationToast('ℹ️', 'Por favor, preencha a História do Personagem. Este campo é obrigatório!');
+
+        // Remove animation after it completes
+        setTimeout(() => {
+            backstoryField.style.animation = '';
+            backstoryField.style.border = '';
+        }, 1500);
+
+        return null;
+    }
 
     let finalStats = {};
     if (method === 'pointBuy') {
@@ -290,3 +370,33 @@ window.getCharacterData = function () {
         atributos: backendStats
     };
 };
+
+// Show Validation Toast
+function showValidationToast(icon, message) {
+    const toast = document.getElementById('validation-toast');
+    if (!toast) return;
+
+    const iconEl = toast.querySelector('.toast-icon');
+    const messageEl = toast.querySelector('.toast-message');
+    if (iconEl) iconEl.textContent = icon || 'ℹ️';
+    if (messageEl) messageEl.textContent = message || 'Campo obrigatório não preenchido.';
+
+    // Reset animations
+    toast.classList.remove('hidden', 'hiding');
+    const progressBar = toast.querySelector('.toast-progress');
+    if (progressBar) {
+        progressBar.style.animation = 'none';
+        setTimeout(() => {
+            progressBar.style.animation = 'shrinkProgress 5s linear forwards';
+        }, 10);
+    }
+
+    // Auto-hide after 5 seconds
+    setTimeout(() => {
+        toast.classList.add('hiding');
+        setTimeout(() => {
+            toast.classList.add('hidden');
+            toast.classList.remove('hiding');
+        }, 300);
+    }, 5000);
+}

@@ -6,6 +6,15 @@
         "class": "Mago",
         "mode": "dnd5e",
         "created_at": "2026-01-22T09:11:47.554962",
-        "last_played": "2026-01-22T14:29:05.666987"
+        "last_played": "2026-01-22T15:18:04.631069"
+    },
+    {
+        "id": "6dbe6561",
+        "name": "Guilherme - zombie apocalipse",
+        "theme": "zombie apocalipse",
+        "class": "Policial",
+        "mode": "dnd5e",
+        "created_at": "2026-01-22T15:53:19.802819",
+        "last_played": "2026-01-22T15:54:14.891162"
     }
 ]

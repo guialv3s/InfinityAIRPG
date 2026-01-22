@@ -147,7 +147,7 @@ def process_message(user_message: str, user_id: int, campaign_id: str) -> str:
     })
 
     response = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-5-mini",
         messages=llm_messages
     )
 
@@ -185,7 +185,7 @@ def generate_character_setup(user_id: int, campaign_id: str, prompt: str) -> str
     # 2. Call AI
     try:
         response = client.chat.completions.create(
-            model="gpt-4o-mini",
+            model="gpt-5-mini",
             messages=history[-10:] # Keep context small for setup
         )
         assistant_message = response.choices[0].message.content
