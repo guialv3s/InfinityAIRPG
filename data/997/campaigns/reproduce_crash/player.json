@@ -1,0 +1,37 @@
+{
+    "nome": "CrashTest",
+    "classe": "Warrior",
+    "tema": "Test",
+    "nivel": 1,
+    "experiencia": 0,
+    "inventario": {
+        "vida_atual": 10,
+        "vida_maxima": 10,
+        "mana_atual": 10,
+        "mana_maxima": 10,
+        "ouro": 0,
+        "itens": [
+            {
+                "nome": "Anel de For\u00e7a",
+                "tipo": "acessorio",
+                "buffs": {
+                    "forca": 2
+                }
+            },
+            {
+                "nome": "Item Bugado",
+                "buffs": "bubu"
+            }
+        ]
+    },
+    "atributos": {
+        "forca": 10,
+        "destreza": 10,
+        "constituicao": 10,
+        "inteligencia": 10,
+        "sabedoria": 10,
+        "carisma": 10
+    },
+    "magias": [],
+    "status": []
+}

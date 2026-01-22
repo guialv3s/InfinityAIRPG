@@ -6,6 +6,11 @@ import math
 def load_player(user_id: int, campaign_id: str = None):
     return load_json(user_id, "player.json", default=None, campaign_id=campaign_id)
 
+def normalize_text(text):
+    import unicodedata
+    if not isinstance(text, str): return str(text)
+    return "".join(c for c in unicodedata.normalize("NFD", text) if unicodedata.category(c) != "Mn").lower()
+
 def save_player(user_id: int, player_data, campaign_id: str = None):
     save_json(user_id, "player.json", player_data, campaign_id=campaign_id)
 
@@ -63,6 +68,59 @@ def adicionar_experiencia(user_id: int, quantidade: int, campaign_id: str = None
 
     return mensagem_level_up
 
+def calculate_item_buffs(items_list: list) -> tuple:
+    buffs = {}
+    extra_hp = 0
+    extra_mp = 0
+    
+    valid_attrs = ["forca", "destreza", "constituicao", "inteligencia", "sabedoria", "carisma"]
+
+    for item in items_list:
+        if isinstance(item, dict):
+            item_buffs = item.get("buffs", {})
+            if not isinstance(item_buffs, dict):
+                continue
+                
+            for attr, value in item_buffs.items():
+                # 1. Parse Value (Handle "+2 desc" or just 2)
+                bonus_val = 0
+                if isinstance(value, (int, float)):
+                    bonus_val = int(value)
+                elif isinstance(value, str):
+                    # Try to extract leading number (e.g., "+2 ...", "2 ...", "-1 ...")
+                    match = re.search(r'^[+\-]?\d+', value.strip())
+                    if match:
+                        try:
+                            bonus_val = int(match.group())
+                        except ValueError:
+                            pass
+                
+                if bonus_val == 0: continue
+
+                # 2. Match Attribute Key
+                # Normalize key to remove accents (e.g. inteligência -> inteligencia)
+                attr_normalized = normalize_text(attr)
+                
+                if "vida_maxima" in attr_normalized or "vida" in attr_normalized and "max" in attr_normalized:
+                    extra_hp += bonus_val
+                elif "mana_maxima" in attr_normalized or "mana" in attr_normalized and "max" in attr_normalized:
+                    extra_mp += bonus_val
+                else:
+                    # Fuzzy match standard attributes
+                    matched_attr = None
+                    if attr_normalized in valid_attrs:
+                        matched_attr = attr_normalized
+                    else:
+                        for va in valid_attrs:
+                            if va in attr_normalized:
+                                matched_attr = va
+                                break
+                    
+                    if matched_attr:
+                        buffs[matched_attr] = buffs.get(matched_attr, 0) + bonus_val
+    
+    return buffs, extra_hp, extra_mp
+
 def interpretar_e_atualizar_estado(resposta: str, user_id: int, campaign_id: str = None) -> str:
     """extracts JSON from response and updates player.json"""
     player = load_player(user_id, campaign_id)
@@ -110,13 +168,58 @@ def interpretar_e_atualizar_estado(resposta: str, user_id: int, campaign_id: str
             # Determine source of inventory data (nested or flat)
             source_inv = data.get("inventario", data)
             
+            # 1. Calculate Old Buffs (Before Update)
+            old_items = inventario.get("itens", [])
+            old_buffs, _, _ = calculate_item_buffs(old_items)
+
+            # --- INTELLIGENT ITEM MERGE ---
+            # Problem: AI sends complete item lists, forgetting buffs of items that stay equipped.
+            # Solution: Merge by item name, preserving buffs from old items.
+            
+            old_items = inventario.get("itens", [])
+            new_items_from_ai = source_inv.get("itens", None)
+            
+            if new_items_from_ai is not None:
+                # Create lookup of old items by name (preserve buffs)
+                old_items_map = {}
+                for item in old_items:
+                    if isinstance(item, dict):
+                        item_name = item.get("nome") or item.get("item") or str(item)
+                        old_items_map[item_name] = item
+                
+                # Merge new items with old data
+                merged_items = []
+                for new_item in new_items_from_ai:
+                    if isinstance(new_item, str):
+                        merged_items.append(new_item)
+                    elif isinstance(new_item, dict):
+                        item_name = new_item.get("nome") or new_item.get("item")
+                        
+                        if item_name and item_name in old_items_map:
+                            # Item existed before - preserve old buffs if new one doesn't have them
+                            old_item = old_items_map[item_name]
+                            
+                            # If new item has no buffs but old one did, keep old buffs
+                            if "buffs" not in new_item and "buffs" in old_item:
+                                new_item["buffs"] = old_item["buffs"]
+                                print(f"INFO: Preserved buffs for '{item_name}' during merge")
+                        
+                        merged_items.append(new_item)
+                    else:
+                        merged_items.append(new_item)
+                
+                final_items = merged_items
+            else:
+                # AI didn't send items at all, keep old list
+                final_items = old_items
+            
             inventario.update({
                 "vida_atual": source_inv.get("vida_atual", source_inv.get("vida", inventario.get("vida_atual", 10))),
                 "vida_maxima": source_inv.get("vida_maxima", inventario.get("vida_maxima", 10)),
                 "mana_atual": source_inv.get("mana_atual", source_inv.get("mana", inventario.get("mana_atual", 10))),
                 "mana_maxima": source_inv.get("mana_maxima", inventario.get("mana_maxima", 10)),
                 "ouro": source_inv.get("ouro", inventario.get("ouro", 0)),
-                "itens": source_inv.get("itens", inventario.get("itens", []))
+                "itens": final_items
             })
 
             if "nivel" in data:
@@ -140,8 +243,24 @@ def interpretar_e_atualizar_estado(resposta: str, user_id: int, campaign_id: str
                     # Atualiza o player local com o XP novo depois de adicionar
                     player["experiencia"] = player.get("experiencia", 0) + xp_recebida
 
+            # CRITICAL RULE: Base attributes are SACRED.
+            # They can ONLY be modified through:
+            # 1. Initial character creation (generate_character_setup or initialization)
+            # 2. Levelup system (handled separately)
+            # 3. Manual admin intervention
+            # 
+            # The AI should NEVER send "atributos" during normal gameplay.
+            # Item buffs are TEMPORARY and calculated on-the-fly during display.
+            # This prevents ALL corruption scenarios.
+            
             if "atributos" in data:
-                player["atributos"] = data["atributos"]
+                # Check if this is initial character creation or a special permanent buff
+                # For now, we COMPLETELY IGNORE atributos from AI during gameplay.
+                # The system instruction already tells AI not to send this.
+                # If it does anyway, we silently skip it to protect data integrity.
+                print(f"WARNING: AI sent 'atributos' in response. Ignoring to preserve base stats integrity.")
+                print(f"DEBUG: Received atributos: {data['atributos']}")
+                # Do NOT modify player["atributos"] here
 
             if "magias" in data:
                 player["magias"] = data["magias"]
@@ -175,7 +294,8 @@ def get_inventory_text(user_id: int, campaign_id: str = None):
         if isinstance(item, str):
             resposta += f"\n- {item}"
         else:
-            resposta += f"\n- {item.get('item', 'Item ???')} (x{item.get('quantidade', 1)})"
+            item_name = item.get('item') or item.get('nome') or 'Item ???'
+            resposta += f"\n- {item_name} (x{item.get('quantidade', 1)})"
     return resposta or "Inventário vazio."
 
 def get_full_status_text(user_id: int, campaign_id: str = None):
@@ -188,21 +308,38 @@ def get_full_status_text(user_id: int, campaign_id: str = None):
     magias = player.get("magias", [])
     status = player.get("status", [])
 
+    # --- Calculate Item Buffs ---
+    items_list = inv.get("itens", [])
+    buffs, extra_hp, extra_mp = calculate_item_buffs(items_list)
+
     nivel = player.get("nivel", 0)
     xp_atual = player.get("experiencia", 0)
     xp_proximo = xp_necessario_para_nivel(nivel)
 
+    vida_max_total = inv.get('vida_maxima', 0) + extra_hp
+    mana_max_total = inv.get('mana_maxima', 0) + extra_mp
 
     texto = f"🧙 Personagem: {player.get('nome', 'Desconhecido')} (Classe: {player.get('classe', '-')})\n"
     texto += f"🎯 Tema: {player.get('tema', '-')}\n"
     texto += f"📊 Nível: {player.get('nivel', 0)} | XP: {xp_atual} / {xp_proximo}\n"
-    texto += f"❤️ Vida: {inv.get('vida_atual', 0)}/{inv.get('vida_maxima', 0)}\n"
-    texto += f"🔵 Mana: {inv.get('mana_atual', 0)}/{inv.get('mana_maxima', 0)}\n"
+    texto += f"❤️ Vida: {inv.get('vida_atual', 0)}/{vida_max_total}"
+    if extra_hp > 0: texto += f" (+{extra_hp})"
+    texto += "\n"
+    
+    texto += f"🔵 Mana: {inv.get('mana_atual', 0)}/{mana_max_total}"
+    if extra_mp > 0: texto += f" (+{extra_mp})"
+    texto += "\n"
+    
     texto += f"💰 Ouro: {inv.get('ouro', 0)}\n\n"
 
     texto += "📌 Atributos:\n"
     for key, val in atributos.items():
-        texto += f"- {key.capitalize()}: {val}\n"
+        bonus = buffs.get(key, 0)
+        if bonus != 0:
+            sinal = "+" if bonus > 0 else ""
+            texto += f"- {key.capitalize()}: {val} ({sinal}{bonus}) = {val + bonus}\n"
+        else:
+            texto += f"- {key.capitalize()}: {val}\n"
 
     texto += "\n🧪 Status:\n"
     if status:
@@ -222,12 +359,13 @@ def get_full_status_text(user_id: int, campaign_id: str = None):
         texto += "- Nenhuma magia aprendida\n"
 
     texto += "\n🎒 Itens:\n"
-    if inv.get("itens"):
-        for item in inv["itens"]:
+    if items_list:
+        for item in items_list:
             if isinstance(item, str):
                 texto += f"- {item}\n"
             else:
-                texto += f"- {item.get('item', 'Item ???')} (x{item.get('quantidade', 1)})\n"
+                item_name = item.get('item') or item.get('nome') or 'Item ???'
+                texto += f"- {item_name} (x{item.get('quantidade', 1)})\n"
     else:
         texto += "- Nenhum item no inventário\n"
 
