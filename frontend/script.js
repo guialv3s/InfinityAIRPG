@@ -50,6 +50,11 @@ const dashboardContainer = document.getElementById('campaign-dashboard');
 const dashboardNewBtn = document.getElementById('dashboard-new-campaign');
 const dashboardContinueBtn = document.getElementById('dashboard-continue-campaign');
 
+// Landing Page Elements
+const landingPage = document.getElementById('landing-page');
+const landingPlayBtn = document.getElementById('landing-play-btn');
+const landingLoginBtn = document.getElementById('landing-login-btn');
+
 // --- State ---
 let authToken = localStorage.getItem('rpg_auth_token');
 let currentUser = null;
@@ -61,7 +66,7 @@ const chatContainer = document.querySelector('.chat-container');
 // --- Auth Functions ---
 async function checkAuth() {
     if (!authToken) {
-        showLogin();
+        showLanding();
         return;
     }
 
@@ -110,15 +115,24 @@ async function checkAuth() {
     }
 }
 
-function showLogin() {
+// --- View Functions ---
+function showLanding() {
     authToken = null;
     localStorage.removeItem('rpg_auth_token');
-    localStorage.removeItem('last_campaign_id'); // Clear persistence
+    localStorage.removeItem('last_campaign_id');
 
     if (chatContainer) chatContainer.classList.add('hidden');
     if (dashboardContainer) dashboardContainer.classList.add('hidden');
+    if (landingPage) landingPage.classList.remove('hidden');
 
     closeModal();
+}
+
+function showLogin() {
+    // Note: showLogin is now called when user clicks buttons on landing page
+    if (landingPage) landingPage.classList.remove('hidden'); // Keep landing as bg if needed, or hide? 
+    // Usually, login modal is shown over landing.
+
     openModal(loginModal);
     overlay.removeEventListener('click', closeModal);
 }
@@ -138,6 +152,7 @@ function logout() {
 
 // --- Dashboard Logic ---
 function showDashboard() {
+    if (landingPage) landingPage.classList.add('hidden');
     if (loginModal) loginModal.classList.add('hidden');
     if (registerModal) registerModal.classList.add('hidden');
     if (chatContainer) chatContainer.classList.add('hidden');
@@ -155,32 +170,50 @@ function showDashboard() {
     }
 }
 
-dashboardNewBtn.addEventListener('click', () => {
-    openModal(creationModal);
-});
-
-dashboardContinueBtn.addEventListener('click', async () => {
-    // Refresh list first to be sure
-    await loadCampaigns(false);
-
-    if (cachedCampaigns.length === 0) {
-        // No campaigns, redirect to new
-        alert("Você ainda não tem campanhas. Vamos criar uma!");
+if (dashboardNewBtn) {
+    dashboardNewBtn.addEventListener('click', () => {
         openModal(creationModal);
-    } else {
-        // Open Sidebar list (or a specific modal if preferred, but sidebar works as list)
-        sidebar.classList.remove('hidden');
-        overlay.classList.remove('hidden'); // Use overlay for sidebar focus if desired?
-        // Actually sidebar usually slides in. Let's just open sidebar.
-        // For better UX, let's open sidebar and hide dashboard? No, dashboard is background.
-        // Let's create a "Select Campaign" modal logic or reuse sidebar. 
-        // User requested: "clicar em continuar... deve aparecer um modal com as campanhas"
-        // Since sidebar ACTS as that list, let's open it.
-        // Or better: Let's reuse the sidebar as a "Modal" effect here.
-        sidebar.classList.remove('hidden');
-    }
-});
+    });
+}
 
+if (dashboardContinueBtn) {
+    dashboardContinueBtn.addEventListener('click', async () => {
+        // Refresh list first to be sure
+        await loadCampaigns(false);
+
+        if (cachedCampaigns.length === 0) {
+            // No campaigns, redirect to new
+            alert("Você ainda não tem campanhas. Vamos criar uma!");
+            openModal(creationModal);
+        } else {
+            // Open Sidebar list (or a specific modal if preferred, but sidebar works as list)
+            sidebar.classList.remove('hidden');
+            overlay.classList.remove('hidden'); // Use overlay for sidebar focus if desired?
+            // Actually sidebar usually slides in. Let's just open sidebar.
+            // For better UX, let's open sidebar and hide dashboard? No, dashboard is background.
+            // Let's create a "Select Campaign" modal logic or reuse sidebar. 
+            // User requested: "clicar em continuar... deve aparecer um modal com as campanhas"
+            // Since sidebar ACTS as that list, let's open it.
+            // Or better: Let's reuse the sidebar as a "Modal" effect here.
+            sidebar.classList.remove('hidden');
+        }
+    });
+}
+
+
+// --- Landing Page Interaction ---
+if (landingPlayBtn) {
+    landingPlayBtn.addEventListener('click', () => {
+        showLogin();
+    });
+}
+
+if (landingLoginBtn) {
+    landingLoginBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        showLogin();
+    });
+}
 
 // --- Login / Register Handlers ---
 async function handleLogin(e) {
@@ -527,14 +560,23 @@ function appendMessage(text, sender, typewriter = false) {
 
 function openModal(modal) { overlay.classList.remove('hidden'); modal.classList.remove('hidden'); }
 function closeModal() {
-    overlay.classList.add('hidden');
-    statusModal.classList.add('hidden');
-    resetModal.classList.add('hidden');
-    deleteModal.classList.add('hidden'); // Added delete modal
-    creationModal.classList.add('hidden');
-    loginModal.classList.add('hidden');
-    registerModal.classList.add('hidden');
-    userModal.classList.add('hidden');
+    const overlay = document.getElementById('modal-overlay');
+    const statusModal = document.getElementById('status-modal');
+    const resetModal = document.getElementById('reset-modal');
+    const deleteModal = document.getElementById('delete-modal');
+    const creationModal = document.getElementById('creation-modal');
+    const loginModal = document.getElementById('login-modal');
+    const registerModal = document.getElementById('register-modal');
+    const userModal = document.getElementById('user-modal');
+
+    if (overlay) overlay.classList.add('hidden');
+    if (statusModal) statusModal.classList.add('hidden');
+    if (resetModal) resetModal.classList.add('hidden');
+    if (deleteModal) deleteModal.classList.add('hidden');
+    if (creationModal) creationModal.classList.add('hidden');
+    if (loginModal) loginModal.classList.add('hidden');
+    if (registerModal) registerModal.classList.add('hidden');
+    if (userModal) userModal.classList.add('hidden');
 }
 overlay.addEventListener('click', closeModal);
 closeButtons.forEach(btn => btn.addEventListener('click', closeModal));

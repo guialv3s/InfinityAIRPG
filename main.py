@@ -21,10 +21,12 @@ class ChatRequest(BaseModel):
 class PlayerCreateRequest(BaseModel):
     user_id: int
     nome: str
-    raca: str  # Added Raca
+    raca: str
     classe: str
     tema: str
     modo: str
+    historia: str
+    atributos: dict
 
 class RegisterRequest(BaseModel):
     username: str
@@ -49,127 +51,6 @@ app.add_middleware(
     allow_headers=["*"]
 )
 
-@app.get("/player/exists/{user_id}")
-async def check_player_exists(user_id: int):
-    player = load_player(user_id)
-    return {"exists": bool(player and player.get("nome"))}
-
-@app.post("/player/create")
-async def create_player(request: PlayerCreateRequest):
-    try:
-        # Legacy Support: Create a default campaign for this "Single Player" request
-        campaign_name = f"{request.nome} - {request.tema}"
-        campaign_id = create_campaign(request.user_id, campaign_name, request.tema, request.classe, request.modo)
-        
-        from src.core.player import generate_initial_stats
-        
-        # Generate Stats based on Race/Class
-        generated = generate_initial_stats(request.classe, request.raca, request.tema)
-        
-        player = {
-            "nome": request.nome,
-            "raca": request.raca,
-            "classe": request.classe.capitalize(),
-            "tema": request.tema,
-            "modo": request.modo.lower(),
-            "nivel": 1,
-            "experiencia": 0,
-            "inventario": generated["inventario"],
-            "atributos": generated["atributos"],
-            "magias": generated["magias"],
-            "status": []
-        }
-        
-        save_player(request.user_id, player, campaign_id=campaign_id)
-        
-        primeira_resposta = process_message("Quero começar minha aventura agora.", request.user_id, campaign_id=campaign_id)
-        
-        # Return response compatible with what legacy might expect, plus campaign_id
-        return {"response": primeira_resposta, "campaign_id": campaign_id}
-        
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-# Campaign Endpoints
-@app.get("/campaigns")
-async def list_campaigns(authorization: Optional[str] = Header(None)):
-    try:
-        if not authorization or not authorization.startswith("Bearer "):
-            return JSONResponse(status_code=401, content={"error": "No token provided"})
-        
-        token = authorization.replace("Bearer ", "")
-        user_id = validate_session(token)
-        if not user_id:
-            return JSONResponse(status_code=401, content={"error": "Invalid token"})
-        
-        campaigns = get_campaigns(int(user_id))
-        return {"campaigns": campaigns}
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
-
-@app.post("/campaigns")
-async def create_new_campaign(request: PlayerCreateRequest, authorization: Optional[str] = Header(None)):
-    try:
-        if not authorization or not authorization.startswith("Bearer "):
-            return JSONResponse(status_code=401, content={"error": "No token provided"})
-        
-        token = authorization.replace("Bearer ", "")
-        user_id = validate_session(token)
-        if not user_id:
-            return JSONResponse(status_code=401, content={"error": "Invalid token"})
-        
-        user_id_int = int(user_id)
-        
-        # 1. Create Campaign Metadata
-        campaign_name = f"{request.nome} - {request.tema}"
-        campaign_id = create_campaign(user_id_int, campaign_name, request.tema, request.classe, request.modo)
-        
-        from src.core.player import generate_initial_stats
-        
-        # Generate Stats
-        generated = generate_initial_stats(request.classe, request.raca, request.tema)
-        
-        # 2. Setup Player Data for this campaign
-        player = {
-            "nome": request.nome,
-            "raca": request.raca,
-            "classe": request.classe.capitalize(),
-            "tema": request.tema,
-            "modo": request.modo.lower(),
-            "nivel": 1,
-            "experiencia": 0,
-            "inventario": generated["inventario"],
-            "atributos": generated["atributos"],
-            "magias": generated["magias"],
-            "status": []
-        }
-        
-        # Save player to the specific campaign folder
-        save_player(user_id_int, player, campaign_id=campaign_id)
-        
-        # 3. Generate Intro
-        primeira_resposta = process_message("Quero começar minha aventura agora.", user_id_int, campaign_id)
-        
-        return {"campaign_id": campaign_id, "response": primeira_resposta, "name": campaign_name}
-        
-    except Exception as e:
-        return JSONResponse(status_code=500, content={"error": str(e)})
-    username: str
-    email: EmailStr
-    password: str
-    confirm_password: str
-    confirm_email: EmailStr
-
-class LoginRequest(BaseModel):
-    username: str
-    password: str
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=["*"],
-    allow_methods=["*"],
-    allow_headers=["*"]
-)
 
 @app.get("/player/exists/{user_id}")
 async def check_player_exists(user_id: int):
@@ -250,35 +131,53 @@ async def create_new_campaign(request: PlayerCreateRequest, authorization: Optio
         campaign_name = f"{request.nome} - {request.tema}"
         campaign_id = create_campaign(user_id_int, campaign_name, request.tema, request.classe, request.modo)
         
-        # 2. Setup Player Data for this campaign
+        # 2. Setup Player Data (Initial)
+        # We start with what the user gave us, but empty inventory/status
         player = {
             "nome": request.nome,
+            "raca": request.raca,
             "classe": request.classe.capitalize(),
             "tema": request.tema,
             "modo": request.modo.lower(),
-            "nivel": 0,
+            "historia": request.historia,
+            "nivel": 1,
             "experiencia": 0,
-            "inventario": {
-                "ouro": 0,
-                "vida_atual": 100,
-                "vida_maxima": 100,
-                "mana_atual": 50,
-                "mana_maxima": 50,
-                "itens": [],
-            },
-            "atributos": {
-                "forca": 10, "destreza": 10, "constituicao": 10,
-                "inteligencia": 10, "sabedoria": 10, "carisma": 10
-            },
+            "atributos": request.atributos, # Use provided attributes
+            "inventario": { "ouro": 0, "vida_atual": 0, "vida_maxima": 0, "mana_atual": 0, "mana_maxima": 0, "itens": [] },
             "magias": [],
             "status": []
         }
         
-        # Save player to the specific campaign folder
         save_player(user_id_int, player, campaign_id=campaign_id)
         
-        # 3. Generate Intro
-        primeira_resposta = process_message("Quero começar minha aventura agora.", user_id_int, campaign_id)
+        # 3. AI Generation (The Magic Step)
+        # We ask the AI to generate the starting condition via a hidden prompt
+        print("🤖 Solicitando geração de personagem para a IA...")
+        system_prompt = f"""
+        AJA COMO UM MESTRE DE RPG. O jogador criou um personagem:
+        Nome: {request.nome}
+        Raça: {request.raca}
+        Classe: {request.classe}
+        História: {request.historia}
+        Atributos: {request.atributos}
+        Tema: {request.tema}
+
+        GERE UM OBJETO JSON contendo:
+        1. 'inventario': com 'vida_maxima', 'vida_atual' (iguais), 'mana_maxima', 'mana_atual' (iguais), 'ouro' e lista de 'itens' inicias adequados à história e classe.
+        2. 'magias': lista de magias iniciais (se aplicável, senão vazio).
+        
+        Sua resposta deve ser APENAS O JSON dentro de blocos de código ```json ... ```.
+        Calcule VIDA e MANA baseados nos atributos (Ex: Alta CON = Mais vida).
+        Dê itens criativos baseados no background dele.
+        """
+        
+        # Run hidden setup (User won't see this)
+        from src.core.chat import generate_character_setup
+        generate_character_setup(user_id_int, campaign_id, system_prompt)
+        
+        # After generation, we send the introductory message
+        intro_prompt = "Descreva onde meu personagem está e como a aventura começa, baseado na minha história."
+        primeira_resposta = process_message(intro_prompt, user_id_int, campaign_id)
         
         return {"campaign_id": campaign_id, "response": primeira_resposta, "name": campaign_name}
         
@@ -388,6 +287,8 @@ async def get_current_user(authorization: Optional[str] = Header(None)):
 
 @app.post("/chat")
 async def chat(request: ChatRequest):
+    print(f"DEBUG: Endpoint /chat chamado por User {request.user_id} na Campaign {request.campaign_id}")
+    print(f"DEBUG: Mensagem: {request.message}")
     try:
         resposta = process_message(request.message, request.user_id, request.campaign_id)
         return {"response": resposta}

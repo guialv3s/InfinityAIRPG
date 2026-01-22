@@ -172,7 +172,10 @@ def get_inventory_text(user_id: int, campaign_id: str = None):
     inv = player.get("inventario", {})
     resposta = f"Vida: {inv.get('vida_atual', 0)}/{inv.get('vida_maxima', 0)}\nOuro: {inv.get('ouro', 0)}\nItens:"
     for item in inv.get("itens", []):
-        resposta += f"\n- {item['item']} (x{item['quantidade']})"
+        if isinstance(item, str):
+            resposta += f"\n- {item}"
+        else:
+            resposta += f"\n- {item.get('item', 'Item ???')} (x{item.get('quantidade', 1)})"
     return resposta or "Inventário vazio."
 
 def get_full_status_text(user_id: int, campaign_id: str = None):
@@ -221,7 +224,10 @@ def get_full_status_text(user_id: int, campaign_id: str = None):
     texto += "\n🎒 Itens:\n"
     if inv.get("itens"):
         for item in inv["itens"]:
-            texto += f"- {item['item']} (x{item['quantidade']})\n"
+            if isinstance(item, str):
+                texto += f"- {item}\n"
+            else:
+                texto += f"- {item.get('item', 'Item ???')} (x{item.get('quantidade', 1)})\n"
     else:
         texto += "- Nenhum item no inventário\n"
 
