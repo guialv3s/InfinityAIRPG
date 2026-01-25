@@ -1,0 +1,25 @@
+FEITO:
+
+- Adicionar para quando um item tiver buff ou debuff no atributo, vida, mana, mostrar o indicador no modal do inventario.
+-Adicionar (i) ícone de informação ao lado dos atributos no modal de criação de personagem que ativa uma pequena janelinha perto do atributo informando pra que cada atributo é usado no RPG.
+-Colocar a função de retornar para a pagina de história / passado do personagem e piscar em vermelho o espaço para digitar, informando que é obrigatório preencher.
+- Criar 3 modos de jogo independente, cada um com a IA seguindo um prompt diferente focado naquele modo de jogo.
+-Colocar o inventario na tela de jogo ao lado direito do chat ( Ilustrado na imamgem enviada ), deixando visível tudo oque tem na janela de inventario de cada modo de jogo. Nos modos que tiverem Grimórios e Inventario com itens, separar por seções clicáveis de: Grimório - Equipamentos ( Armas, roupas e itens equipados ) - Inventario ( Itens que não fazem parte das outras seções )
+
+
+
+AJUSTAR:
+
+
+- 
+- 
+- Adicionar para que a IA SEMPRE verifique o STATUS atual do personagem antes de responder e colocar um contador do tempo de ativação até o termino do status, por exemplo: Sobre cura de 10 pontos de vida por 3 rounds - 3/3 ( Na próxima ação da IA ela vai adicionar mais 10 de vida, e dimininuir o contador para 2/3 ) e assim por diante enquanto o status estiver ativo.
+-Quando uma magia for gerada, gerar também o custo de uso de mana dela ( Nos modo RPG Original e Narrativo )
+-Moldar completamente o modo de jogo D&D 5E.
+
+-Otimizar o uso de tokens usando criação de pontos importantes da história a cada 10 interações do usuário com tamanho de 1 paragrafo. 
+-Criação de resumo de história de até 5 parágrafos a cada 20 pontos importantes da história, e começar a intercalar a memória da IA com resumo e pontos importantes, de forma que melhore a memória.
+-Criar um perfil de adm com login e senha sendo: adm adm, e uma pagina de dashboard de gerenciamento de usuários, bugs, reiniciar o servidor que seja acessível apenas pelo usuário adm adm. O botão que encaminha para essa pagina de gerenciamente fica no modal de usuário que abre pela sidebar. ( Botão só será visível pelos perfis que tiverem o cargo de ADM. )
+
+
+- 
