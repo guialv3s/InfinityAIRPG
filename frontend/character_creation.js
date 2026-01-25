@@ -259,6 +259,10 @@ window.getCharacterData = function () {
     const backstory = document.getElementById('char-backstory').value;
     const method = document.getElementById('attr-method').value;
 
+    // Data Collector for Submission
+
+    // Validate backstory field
+
     // Validate basic fields first
     console.log('Validating Name:', name);
     if (!name || name.trim() === '') {

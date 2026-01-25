@@ -3,8 +3,128 @@ import re
 import json
 import math
 
+def calculate_default_slots(classe: str, nivel: int) -> dict:
+    """Calcula slots de magia padrão do D&D 5E para classes conjuradoras (Níveis 1-20)"""
+    classe = classe.lower()
+    slots = {}
+    
+    # Full spell slot table for full casters (Wizard, Sorcerer, Cleric, Druid, Bard)
+    # Format: level -> {circle: total_slots}
+    full_caster_table = {
+        1: {"1": 2},
+        2: {"1": 3},
+        3: {"1": 4, "2": 2},
+        4: {"1": 4, "2": 3},
+        5: {"1": 4, "2": 3, "3": 2},
+        6: {"1": 4, "2": 3, "3": 3},
+        7: {"1": 4, "2": 3, "3": 3, "4": 1},
+        8: {"1": 4, "2": 3, "3": 3, "4": 2},
+        9: {"1": 4, "2": 3, "3": 3, "4": 3, "5": 1},
+        10: {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2},
+        11: {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1},
+        12: {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1},
+        13: {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1},
+        14: {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1},
+        15: {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1},
+        16: {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1},
+        17: {"1": 4, "2": 3, "3": 3, "4": 3, "5": 2, "6": 1, "7": 1, "8": 1, "9": 1},
+        18: {"1": 4, "2": 3, "3": 3, "4": 3, "5": 3, "6": 1, "7": 1, "8": 1, "9": 1},
+        19: {"1": 4, "2": 3, "3": 3, "4": 3, "5": 3, "6": 2, "7": 1, "8": 1, "9": 1},
+        20: {"1": 4, "2": 3, "3": 3, "4": 3, "5": 3, "6": 2, "7": 2, "8": 1, "9": 1},
+    }
+    
+    # Check if class is a full caster
+    if any(c in classe for c in ["mago", "feiticeiro", "clerigo", "clérigo", "druida", "bardo"]):
+        if nivel in full_caster_table:
+            for circle, total in full_caster_table[nivel].items():
+                slots[circle] = {"total": total, "usado": 0}
+        else:
+            # Fallback for invalid levels
+            slots["1"] = {"total": 2, "usado": 0}
+    
+    # Warlock uses Pact Magic (different system, simplified here)
+    elif "bruxo" in classe or "warlock" in classe:
+        pact_slots = min(4, (nivel + 1) // 2)  # Max 4 slots
+        pact_level = min(5, (nivel + 1) // 2)  # Slots up to 5th level
+        slots[str(pact_level)] = {"total": pact_slots, "usado": 0}
+    
+    # Half-casters (Paladin, Ranger) - start at level 2
+    elif any(c in classe for c in ["paladino", "ranger", "guardião", "guardi"]):
+        if nivel >= 2:
+            half_caster_level = (nivel + 1) // 2
+            if half_caster_level in full_caster_table:
+                for circle, total in full_caster_table[half_caster_level].items():
+                    slots[circle] = {"total": total, "usado": 0}
+    
+    return slots
+
+def inject_implicit_buffs(items: list, player_class: str):
+    """
+    Se a IA esquecer de colocar 'buffs', nós inferimos baseados no nome.
+    Isso garante que o inventário não fique 'vazio' de stats.
+    """
+    if not items: return []
+    
+    for item in items:
+        # Se já tiver buffs, ignora
+        if "buffs" in item and item["buffs"]: continue
+        
+        name = item.get("nome", "").lower()
+        desc = item.get("descricao", "").lower()
+        buffs = {}
+        
+        # Lógica Simples de Inferência
+        if "cajado" in name or "staff" in name or "varinha" in name:
+            if "mago" in player_class.lower() or "feiticeiro" in player_class.lower():
+                buffs["inteligencia"] = 1
+            elif "druida" in player_class.lower():
+                buffs["sabedoria"] = 1
+                
+        if "espada" in name or "machado" in name:
+            buffs["forca"] = 1
+        if "adaga" in name or "arco" in name or "besta" in name:
+            buffs["destreza"] = 1
+        if "escudo" in name or "armadura" in name or "veste" in name or "robe" in name:
+            buffs["constituicao"] = 1 # Abstração para Defesa/Vida
+            
+        if "anel" in name or "amuleto" in name:
+            if "inteligencia" in desc: buffs["inteligencia"] = 1
+            elif "sabedoria" in desc: buffs["sabedoria"] = 1
+            else: buffs["carisma"] = 1
+            
+        if buffs:
+            item["buffs"] = buffs
+            # Opcional: print(f"DEBUG: Injected implicit buffs to {item['nome']}: {buffs}")
+            
+    return items
+
 def load_player(user_id: int, campaign_id: str = None):
-    return load_json(user_id, "player.json", default=None, campaign_id=campaign_id)
+    data = load_json(user_id, "player.json", default=None, campaign_id=campaign_id)
+    
+    if data:
+        # 1. Force Spell Slots logic if missing (Fix for AI Hallucinations)
+        has_slots = "spell_slots" in data and len(data["spell_slots"]) > 0
+        is_dnd = "dnd" in data.get("modo", "").lower() or "5e" in data.get("modo", "").lower()
+        
+        if is_dnd:
+            # FORCE REMOVE MANA (Cleanup)
+            if "inventario" in data:
+                if "mana_atual" in data["inventario"]: data["inventario"].pop("mana_atual")
+                if "mana_maxima" in data["inventario"]: data["inventario"].pop("mana_maxima")
+            
+            # REGENERATE SLOTS
+            if not has_slots:
+                print(f"DEBUG: Regenerating missing spell slots for {data.get('classe')} Lv {data.get('nivel', 1)}")
+                data["spell_slots"] = calculate_default_slots(data.get("classe", ""), data.get("nivel", 1))
+                
+            # INJECT BUFFS
+            if "inventario" in data and "itens" in data["inventario"]:
+                data["inventario"]["itens"] = inject_implicit_buffs(data["inventario"]["itens"], data.get("classe", ""))
+            
+            # Save correction immediately
+            save_player(user_id, data, campaign_id)
+            
+    return data
 
 def normalize_text(text):
     import unicodedata
@@ -13,6 +133,36 @@ def normalize_text(text):
 
 def save_player(user_id: int, player_data, campaign_id: str = None):
     save_json(user_id, "player.json", player_data, campaign_id=campaign_id)
+
+def perform_long_rest(user_id: int, campaign_id: str = None) -> str:
+    """
+    Performs a Long Rest: Resets all spell slots and restores HP to max.
+    Returns a message describing what was recovered.
+    """
+    player = load_player(user_id, campaign_id)
+    if not player:
+        return "Erro: Personagem não encontrado."
+    
+    inventario = player.get("inventario", {})
+    vida_maxima = inventario.get("vida_maxima", 100)
+    vida_atual = inventario.get("vida_atual", 0)
+    
+    # Restore HP to max
+    inventario["vida_atual"] = vida_maxima
+    hp_recovered = vida_maxima - vida_atual
+    
+    # Reset all spell slots
+    slots_message = ""
+    if "spell_slots" in player and player["spell_slots"]:
+        for nivel, slots in player["spell_slots"].items():
+            if isinstance(slots, dict) and "usado" in slots:
+                slots["usado"] = 0
+        slots_message = " Todos os espaços de magia foram restaurados."
+    
+    player["inventario"] = inventario
+    save_player(user_id, player, campaign_id)
+    
+    return f"💤 **Descanso Longo Completo!**\n❤️ Recuperou {hp_recovered} HP (agora {vida_maxima}/{vida_maxima}).{slots_message}"
 
 def xp_necessario_para_nivel(nivel_atual: int) -> int:
     # Nível 0 = 100, e cada nível seguinte +50 XP
@@ -221,6 +371,40 @@ def interpretar_e_atualizar_estado(resposta: str, user_id: int, campaign_id: str
                 "ouro": source_inv.get("ouro", inventario.get("ouro", 0)),
                 "itens": final_items
             })
+
+            # Spell Slots (D&D 5E mode) - INTELLIGENT MERGE
+            if "spell_slots" in data or "spell_slots" in source_inv:
+                spell_slots_data = data.get("spell_slots") or source_inv.get("spell_slots")
+                if spell_slots_data:
+                    # Get existing spell_slots, initialize if doesn't exist
+                    existing_slots = player.get("spell_slots", {})
+                    
+                    # Merge: update only the circles provided by AI, keep the rest
+                    for circle, slots_info in spell_slots_data.items():
+                        existing_slots[circle] = slots_info
+                    
+                    player["spell_slots"] = existing_slots
+                    print(f"INFO: Spell slots mesclados. AI enviou: {spell_slots_data}, Total agora: {existing_slots}")
+            
+            # Safeguard: Ensure all expected spell slots exist for the character's level
+            is_dnd = "dnd" in player.get("modo", "").lower() or "5e" in player.get("modo", "").lower()
+            if is_dnd and "spell_slots" in player:
+                expected_slots = calculate_default_slots(player.get("classe", ""), player.get("nivel", 1))
+                current_slots = player["spell_slots"]
+                
+                # Add any missing circles
+                for circle, defaults in expected_slots.items():
+                    if circle not in current_slots:
+                        current_slots[circle] = defaults
+                        print(f"SAFEGUARD: Restored missing spell circle {circle}")
+                
+                player["spell_slots"] = current_slots
+            
+            # Fallback: If AI forgot slots but it's D&D, recalculate
+            is_dnd = "dnd" in player.get("modo", "").lower() or "5e" in player.get("modo", "").lower()
+            if is_dnd and "spell_slots" not in player:
+                 print("WARN: AI forgot spell slots. Recalculating default.")
+                 player["spell_slots"] = calculate_default_slots(player.get("classe", ""), player.get("nivel", 1))
 
             if "nivel" in data:
                 player["nivel"] = data["nivel"]

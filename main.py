@@ -57,6 +57,22 @@ async def check_player_exists(user_id: int):
     player = load_player(user_id)
     return {"exists": bool(player and player.get("nome"))}
 
+@app.get("/player/{user_id}/{campaign_id}")
+async def get_player_data(user_id: int, campaign_id: str, authorization: Optional[str] = Header(None)):
+    """Get complete player data for a campaign"""
+    if not authorization: return JSONResponse(status_code=401, content={"error": "Unauthorized"})
+    
+    token = authorization.replace("Bearer ", "")
+    session_user_id = validate_session(token)
+    
+    if not session_user_id: 
+        return JSONResponse(status_code=401, content={"error": "Invalid token"})
+        
+    from src.core.player import load_player
+    player = load_player(user_id, campaign_id)
+    return player
+
+
 @app.post("/player/create")
 async def create_player(request: PlayerCreateRequest):
     try:

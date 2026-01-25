@@ -51,27 +51,68 @@
     </aside>
 
     <main id="main-content">
-        <div class="chat-container">
-            <header>
-                <div class="header-left">
-                    <button id="menu-btn" class="icon-btn">☰</button>
-                    <h1>✦ Infinity AI RPG</h1>
-                </div>
-                <div class="header-buttons">
-                    <!-- Profile button removed from here -->
-                    <button id="status-btn" class="icon-btn" title="Status & Inventário">🎒</button>
-                    <button id="reset-btn" class="icon-btn danger" title="Resetar Jogo">↺</button>
-                </div>
-            </header>
+        <div class="game-layout">
+            <!-- Left Column: Chat -->
+            <div class="chat-section">
+                <header>
+                    <div class="header-left">
+                        <button id="menu-btn" class="icon-btn">☰</button>
+                        <h1>✦ Infinity AI RPG</h1>
+                    </div>
+                    <div class="header-buttons">
+                        <button id="reset-btn" class="icon-btn danger" title="Resetar Jogo">↺</button>
+                    </div>
+                </header>
 
-            <div id="messages" class="messages-area">
-                <!-- Messages will be loaded here -->
+                <div id="messages" class="messages-area">
+                    <!-- Messages will be loaded here -->
+                </div>
+
+                <div class="input-area">
+                    <input type="text" id="user-input" placeholder="Digite sua ação..." autocomplete="off">
+                    <button id="send-btn">➤</button>
+                </div>
             </div>
 
-            <div class="input-area">
-                <input type="text" id="user-input" placeholder="Digite sua ação..." autocomplete="off">
-                <button id="send-btn">➤</button>
-            </div>
+            <!-- Right Column: Inventory Sidebar -->
+            <aside id="inventory-sidebar" class="inventory-sidebar">
+                <!-- Stats Header -->
+                <div class="sidebar-stats">
+                    <div id="stats-display" class="stats-grid">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                    <div id="attributes-display" class="attributes-section">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Tab Navigation -->
+                <div class="sidebar-tabs">
+                    <button class="sidebar-tab active" data-tab="grimorio">📜 Grimório</button>
+                    <button class="sidebar-tab" data-tab="equipment">⚔️ Equipamentos</button>
+                    <button class="sidebar-tab" data-tab="inventory">🎒 Inventário</button>
+                </div>
+
+                <!-- Tab Content -->
+                <div class="sidebar-content">
+                    <div id="tab-grimorio" class="tab-pane active">
+                        <!-- Spells will be loaded here -->
+                    </div>
+                    <div id="tab-equipment" class="tab-pane hidden">
+                        <!-- Equipment will be loaded here -->
+                    </div>
+                    <div id="tab-inventory" class="tab-pane hidden">
+                        <!-- Items will be loaded here -->
+                    </div>
+                </div>
+
+                <!-- Future Space -->
+                <div class="sidebar-footer">
+                    <small style="color: #666; text-align: center; display: block; padding: 10px;">
+                        Espaço reservado para futuras funcionalidades
+                    </small>
+                </div>
+            </aside>
         </div>
     </main>
 
@@ -282,6 +323,7 @@
     <script src="auth.js"></script>
     <script src="character_creation.js"></script>
     <script src="game.js"></script>
+    <script src="sidebar_inventory.js"></script>
 </body>
 
 </html>

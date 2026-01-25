@@ -154,7 +154,170 @@ body {
     /* 280px sidebar + 20px gap */
 }
 
-/* Header & Container */
+/* New 2-Column Game Layout */
+.game-layout {
+    width: calc(100% - 40px);
+    max-width: 1600px;
+    height: 95vh;
+    display: grid;
+    grid-template-columns: 1fr 400px;
+    /* Chat | Sidebar */
+    gap: 15px;
+    z-index: 10;
+}
+
+/* Chat Section (Left Column) */
+.chat-section {
+    background: rgba(45, 27, 78, 0.6);
+    backdrop-filter: blur(16px);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+    transition: all 0.4s ease;
+}
+
+/* Inventory Sidebar (Right Column) */
+.inventory-sidebar {
+    background: rgba(20, 10, 40, 0.8);
+    backdrop-filter: blur(16px);
+    border-radius: 20px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    border: 1px solid rgba(123, 44, 191, 0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+/* Stats Header in Sidebar */
+.sidebar-stats {
+    padding: 15px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.stats-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+    gap: 10px;
+    margin-bottom: 15px;
+}
+
+.stat-box {
+    background: linear-gradient(135deg, rgba(157, 78, 221, 0.2), rgba(157, 78, 221, 0.05));
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+    border: 1px solid rgba(157, 78, 221, 0.3);
+}
+
+.stat-label {
+    font-size: 0.75rem;
+    color: #aaa;
+    text-transform: uppercase;
+}
+
+.stat-value {
+    font-size: 1.3rem;
+    font-weight: bold;
+    color: var(--accent-color);
+}
+
+/* Attributes Section */
+.attributes-section {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+}
+
+.attr-box {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 8px;
+    border-radius: 6px;
+    text-align: center;
+}
+
+.attr-name {
+    font-size: 0.7rem;
+    color: #888;
+}
+
+.attr-value {
+    font-size: 1.1rem;
+    font-weight: bold;
+}
+
+.attr-mod {
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+}
+
+/* Sidebar Tabs */
+.sidebar-tabs {
+    display: flex;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+.sidebar-tab {
+    flex: 1;
+    padding: 12px 8px;
+    background: transparent;
+    border: none;
+    color: #888;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.3s;
+    border-bottom: 2px solid transparent;
+}
+
+.sidebar-tab:hover {
+    background: rgba(255, 255, 255, 0.05);
+    color: #ccc;
+}
+
+.sidebar-tab.active {
+    color: var(--accent-color);
+    border-bottom-color: var(--secondary-color);
+}
+
+/* Sidebar Content Area */
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 15px;
+}
+
+.tab-pane {
+    display: block;
+}
+
+.tab-pane.hidden {
+    display: none;
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+    padding: 10px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(0, 0, 0, 0.2);
+}
+
+/* Responsive: Collapse sidebar on mobile */
+@media (max-width: 1024px) {
+    .game-layout {
+        grid-template-columns: 1fr;
+        /* Single column */
+    }
+
+    .inventory-sidebar {
+        display: none;
+        /* Hide on mobile, show modal instead */
+    }
+}
+
+/* Old compatibility (for dashboard, etc.) */
 .chat-container {
     width: calc(100% - 40px);
     max-width: 1400px;
@@ -169,19 +332,9 @@ body {
     overflow: hidden;
     position: relative;
     z-index: 10;
-    /* Centering is handled by #main-content flexbox now */
     transition: all 0.4s ease;
     opacity: 1;
     visibility: visible;
-}
-
-/* Removed previous layout hacks for .chat-container.sidebar-open */
-
-@media (max-width: 768px) {
-    .chat-container.sidebar-open {
-        width: calc(100% - 40px);
-        max-width: 1400px;
-    }
 }
 
 .chat-container.hidden {
@@ -1232,4 +1385,32 @@ option {
     to {
         width: 0%;
     }
+}
+
+/* Custom Responsive Styles for Inventory Modal */
+#status-modal {
+    width: 95%;
+    max-width: 1000px;
+    /* Allow it to be much wider */
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    /* Don't overflow the screen height */
+    padding: 0;
+    /* Let header and body handle padding for better scroll */
+    background: rgba(26, 21, 40, 0.95);
+    /* Slightly less transparent for readability */
+}
+
+#status-modal .modal-header {
+    padding: 20px;
+    margin-bottom: 0;
+    flex-shrink: 0;
+}
+
+#status-modal .modal-body {
+    padding: 20px;
+    overflow-y: auto;
+    /* Scrollable content */
+    flex: 1;
 }

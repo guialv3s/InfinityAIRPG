@@ -1,0 +1,186 @@
+[
+    {
+        "role": "system",
+        "content": "\n        AJA COMO UM MESTRE DE RPG. O jogador criou um personagem:\n        Nome: Guilherme\n        Ra\u00e7a: Humano\n        Classe: Mago\n        Hist\u00f3ria: Arquimago de level 15, treinado pelo antigo rei mago, o mais poderoso do mundo.\n        Atributos: {'forca': 10, 'destreza': 12, 'constituicao': 12, 'inteligencia': 16, 'sabedoria': 16, 'carisma': 11}\n        Tema: Fantasia magica\n\n        GERE UM OBJETO JSON contendo:\n        1. 'inventario': com 'vida_maxima', 'vida_atual' (iguais), 'mana_maxima', 'mana_atual' (iguais), 'ouro' e lista de 'itens' inicias adequados \u00e0 hist\u00f3ria e classe.\n        2. 'magias': lista de magias iniciais (se aplic\u00e1vel, sen\u00e3o vazio).\n        \n        Sua resposta deve ser APENAS O JSON dentro de blocos de c\u00f3digo ```json ... ```.\n        Calcule VIDA e MANA baseados nos atributos (Ex: Alta CON = Mais vida).\n        D\u00ea itens criativos baseados no background dele.\n        "
+    },
+    {
+        "role": "system",
+        "content": "Setup Output: ```json\n{\n  \"inventario\": {\n    \"vida_maxima\": 110,\n    \"vida_atual\": 110,\n    \"mana_maxima\": 320,\n    \"mana_atual\": 320,\n    \"ouro\": 2400,\n    \"itens\": [\n      {\n        \"nome\": \"Cajado do Rei Antigo\",\n        \"descricao\": \"Cajado legado pelo antigo rei mago, feito de \u00e9bano com runas douradas.\",\n        \"propriedades\": [\n          \"+2 ao poder de magias ofensivas lan\u00e7adas com o cajado\",\n          \"Foco arcano permanente (dispensa foco simples)\",\n          \"Armazena at\u00e9 3 cargas de energia: cada carga restaura 30 de mana; recarrega 1 carga por dia ao amanhecer\"\n        ]\n      },\n      {\n        \"nome\": \"Grim\u00f3rio do Arquimago\",\n        \"descricao\": \"Livro de feiti\u00e7os pessoal escrito pelo pr\u00f3prio Guilherme durante seu treinamento real.\",\n        \"propriedades\": [\n          \"Cont\u00e9m 40 feiti\u00e7os anotados (inclui rituais raros)\",\n          \"Permite preparar ou trocar 2 magias adicionais ao meditar\"\n        ]\n      },\n      {\n        \"nome\": \"Manto do Arquimago\",\n        \"descricao\": \"Manto longo tecido com fios encantados do pal\u00e1cio real.\",\n        \"propriedades\": [\n          \"+1 \u00e0 prote\u00e7\u00e3o f\u00edsica\",\n          \"Redu\u00e7\u00e3o m\u00e1gica: receba -2 dano de efeitos m\u00e1gicos n\u00e3o-lementares\",\n          \"Regenera\u00e7\u00e3o de mana passiva: +5 mana por minuto enquanto medita\"\n        ]\n      },\n      {\n        \"nome\": \"Anel de Mem\u00f3ria Arcana\",\n        \"descricao\": \"Anel simples com uma gema que pulsa com lembran\u00e7as de f\u00f3rmulas.\",\n        \"propriedades\": [\n          \"Armazena um feiti\u00e7o preparado (n\u00edvel \u2264 5) para conjura\u00e7\u00e3o r\u00e1pida uma vez por dia\",\n          \"Ajuda a evitar esquecimento de rituais complexos\"\n        ]\n      },\n      {\n        \"nome\": \"Esferas de Mana\",\n        \"descricao\": \"Bolsa com esferas cristalinas usadas para restaura\u00e7\u00e3o imediata de energia arcana.\",\n        \"quantidade\": 3,\n        \"propriedades\": [\n          \"Cada esfera restaura 80 de mana ao ser consumida\"\n        ]\n      },\n      {\n        \"nome\": \"Po\u00e7\u00e3o Maior de Cura\",\n        \"descricao\": \"Frasco com l\u00edquido vermelho brilhante preparado pelos curadores reais.\",\n        \"quantidade\": 2,\n        \"propriedades\": [\n          \"Cada po\u00e7\u00e3o restaura 50 de vida ao ser consumida\"\n        ]\n      },\n      {\n        \"nome\": \"Bolsa de Componentes\",\n        \"descricao\": \"Pequena bolsa contendo componentes mundanos e raros para rituais.\",\n        \"propriedades\": [\n          \"Cont\u00e9m componentes para a maioria dos feiti\u00e7os de escola comum\",\n          \"Inclui uma pequena pe\u00e7a rara (s\u00edmbolo do reino) usada em rituais de alta magia\"\n        ]\n      },\n      {\n        \"nome\": \"Selo de Autoridade Real\",\n        \"descricao\": \"Amuleto com o bras\u00e3o do antigo rei mago \u2014 sinal de autoridade e legado.\",\n        \"propriedades\": [\n          \"Uma vez por dia, pode impor vantagem em testes de Carisma para influenciar criaturas m\u00e1gicas ou servos leais\",\n          \"Usado como chave simb\u00f3lica em locais ligados ao antigo reinado\"\n        ]\n      },\n      {\n        \"nome\": \"Mapa do Observat\u00f3rio Velado\",\n        \"descricao\": \"Mapa antigo que indica a localiza\u00e7\u00e3o de uma torre esquecida ligada ao rei mago.\",\n        \"propriedades\": [\n          \"Fonte de um gancho de aventura; revela passagens ocultas quando estudado por 1 hora\"\n        ]\n      }\n    ]\n  },\n  \"magias\": [\n    {\n      \"nome\": \"M\u00edsseis M\u00e1gicos\",\n      \"nivel\": 1,\n      \"descricao\": \"Proj\u00e9teis de energia que nunca erram o alvo; ideal para garantir dano seguro.\"\n    },\n    {\n      \"nome\": \"Escudo Arcano\",\n      \"nivel\": 1,\n      \"descricao\": \"Barreira instant\u00e2nea que aumenta a prote\u00e7\u00e3o e pode bloquear um ataque m\u00e1gico imediato.\"\n    },\n    {\n      \"nome\": \"Detectar Magia\",\n      \"nivel\": 1,\n      \"descricao\": \"Permite identificar a presen\u00e7a e a escola de magia em objetos ou \u00e1reas pr\u00f3ximas.\"\n    },\n    {\n      \"nome\": \"Imagem Espelhada\",\n      \"nivel\": 2,\n      \"descricao\": \"Cria c\u00f3pias ilus\u00f3rias do conjurador para confundir inimigos e reduzir acertos.\"\n    },\n    {\n      \"nome\": \"Invisibilidade\",\n      \"nivel\": 2,\n      \"descricao\": \"Torna um alvo impercept\u00edvel aos olhos comuns at\u00e9 que realize a\u00e7\u00e3o ofensiva.\"\n    },\n    {\n      \"nome\": \"Rel\u00e2mpago\",\n      \"nivel\": 3,\n      \"descricao\": \"Rajada concentrada de eletricidade em linha, atravessa inimigos e objetos condutores.\"\n    },\n    {\n      \"nome\": \"Bola de Fogo\",\n      \"nivel\": 3,\n      \"descricao\": \"Explos\u00e3o incendi\u00e1ria de grande \u00e1rea; assinatura de mago ofensivo experiente.\"\n    },\n    {\n      \"nome\": \"Contram\u00e1gica\",\n      \"nivel\": 3,\n      \"descricao\": \"Interrompe ou bloqueia a conjura\u00e7\u00e3o de outro mago no momento-chave.\"\n    },\n    {\n      \"nome\": \"Muralha de For\u00e7a\",\n      \"nivel\": 4,\n      \"descricao\": \"Barreira invis\u00edvel e impenetr\u00e1vel para separar aliados de inimigos ou conter amea\u00e7as.\"\n    },\n    {\n      \"nome\": \"Tempestade Arcana\",\n      \"nivel\": 5,\n      \"descricao\": \"Invoca uma tormenta de energia pura que causa dano m\u00e1gico cont\u00ednuo em uma \u00e1rea ampla.\"\n    },\n    {\n      \"nome\": \"Porta Dimensional\",\n      \"nivel\": 5,\n      \"descricao\": \"Cria uma passagem curta entre dois pontos conhecidos, usada para transporte t\u00e1tico.\"\n    },\n    {\n      \"nome\": \"Manipula\u00e7\u00e3o Temporal (Rasgo)\",\n      \"nivel\": 7,\n      \"descricao\": \"Altera levemente o fluxo temporal ao redor de um alvo (lentid\u00e3o/velocidade breve).\"\n    },\n    {\n      \"nome\": \"Teleporte Longo\",\n      \"nivel\": 7,\n      \"descricao\": \"Permite deslocamento instant\u00e2neo a grandes dist\u00e2ncias entre locais conhecidos.\"\n    },\n    {\n      \"nome\": \"Selo do Rei Mago\",\n      \"nivel\": 9,\n      \"descricao\": \"Feiti\u00e7o lend\u00e1rio ligado ao legado do antigo rei: cria um selo arcano de imenso poder que pode aprisionar, proteger ou devastar conforme a vontade do conjurador. Raro e exigente em mana; conhecimento obrigat\u00f3rio no Grim\u00f3rio Real.\"\n    }\n  ]\n}\n```"
+    },
+    {
+        "role": "user",
+        "content": "Descreva onde meu personagem est\u00e1 e como a aventura come\u00e7a, baseado na minha hist\u00f3ria."
+    },
+    {
+        "role": "assistant",
+        "content": "Guilherme, o Arquimago, encontrava-se em seu antigo local de treinamento, o majestoso Observat\u00f3rio de Galdor, escondido nas montanhas. Uma imensa torre de pedra coberta por vegeta\u00e7\u00e3o, este lugar era repleto de mist\u00e9rios e segredos m\u00e1gicos, os ecos de encantamentos ainda reverberavam por seus corredores. O c\u00e9u noturno estava limpo, com estrelas brilhando intensamente, como se o pr\u00f3prio universo estivesse observando.\n\nRecentemente, uma antiga profecia havia chegado at\u00e9 voc\u00ea, revelando que uma poderosa rel\u00edquia, perdida h\u00e1 tempos, estava em seu caminho. Essa rel\u00edquia, chamada de \"Fragmento da Ess\u00eancia\", tinha o poder de amplificar ainda mais as habilidades m\u00e1gicas de seu portador. Mas havia mais: diziam as lendas que o fragmento estava guardado em uma caverna, protegida por uma criatura ancestral que se alimentava de magia. \n\nEnquanto voc\u00ea estudava seu Grim\u00f3rio do Arquimago, preparava-se para planej\u00e1-la. Seria necess\u00e1rio reunir componentes m\u00e1gicos e talvez usar seu Selo de Autoridade Real para obter apoio de aqueles que ainda o reconheciam como o \u00faltimo disc\u00edpulo do antigo rei mago. Antes de partir, um brilho inusitado no c\u00e9u chamou sua aten\u00e7\u00e3o. Uma estrela cadente, talvez um sinal, ou uma advert\u00eancia?\n\nO que voc\u00ea faz? \n\n1. Estuda seu Grim\u00f3rio em busca de feiti\u00e7os que podem ser \u00fateis para a jornada.\n2. Re\u00fane seus itens e se prepara para partir em dire\u00e7\u00e3o \u00e0 caverna.\n3. Convoca um aliado de confian\u00e7a para acompanh\u00e1-lo na miss\u00e3o. \n\nEscolha sua a\u00e7\u00e3o!"
+    },
+    {
+        "role": "user",
+        "content": "que nivel eu sou?"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea \u00e9 um Mago de n\u00edvel 15. Isso significa que possui um vasto conhecimento de feiti\u00e7os e uma ampla gama de habilidades m\u00e1gicas para facilitar sua jornada.\n\nAgora, a escolha \u00e9 sua! Voc\u00ea deseja:\n\n1. Estudar seu Grim\u00f3rio para preparar feiti\u00e7os ent\u00e3o necess\u00e1rios.\n2. Equipar-se e partir imediatamente em dire\u00e7\u00e3o \u00e0 caverna em busca do Fragmento da Ess\u00eancia.\n3. Convocar um aliado para se juntar \u00e0 sua aventura.\n\nO que voc\u00ea decide fazer?"
+    },
+    {
+        "role": "user",
+        "content": "quantos slots de magia eu tenho, levando em considera\u00e7\u00e3o que sou nivel 15"
+    },
+    {
+        "role": "assistant",
+        "content": "Como um Mago de n\u00edvel 15, voc\u00ea possui a seguinte distribui\u00e7\u00e3o de slots de magia:\n\n- **Truques (n\u00edvel 0):** 4 slots\n- **C\u00edrculo 1:** 4 slots\n- **C\u00edrculo 2:** 3 slots\n- **C\u00edrculo 3:** 3 slots\n- **C\u00edrculo 4:** 3 slots\n- **C\u00edrculo 5:** 2 slots\n- **C\u00edrculo 6:** 1 slot\n- **C\u00edrculo 7:** 1 slot\n- **C\u00edrculo 8:** 1 slot\n- **C\u00edrculo 9:** 1 slot\n\nAgora, se voc\u00ea decidir conjurar alguma magia, informe qual delas voc\u00ea gostaria de preparar ou usar. \n\nCaso deseje realizar alguma a\u00e7\u00e3o espec\u00edfica, como estudar seu Grim\u00f3rio ou procurar itens, tamb\u00e9m \u00e9 poss\u00edvel. O que voc\u00ea gostaria de fazer?"
+    },
+    {
+        "role": "user",
+        "content": "ativo a magia de armadura arcana para testar meu poder"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea se concentra e invoca a magia \"Escudo Arcano\". Com um gesto fluido de suas m\u00e3os, as runas em seu Cajado do Rei Antigo come\u00e7am a brilhar, canalizando o poder m\u00e1gico que flui ao seu redor. A energia se intensifica e forma uma barreira protetora ao seu redor, tornando-se uma manifesta\u00e7\u00e3o vis\u00edvel da sua destreza m\u00e1gica.\n\nAo conjurar a magia, voc\u00ea gasta um slot de 1\u00ba n\u00edvel.\n\n**Gasta 1 slot de N\u00edvel 1 (Restam 3/4)**.\n\nAgora, voc\u00ea est\u00e1 envolto em uma aura protetora que oferece defesa adicional contra ataques. \n\nO que voc\u00ea gostaria de fazer a seguir? Voc\u00ea pode:\n\n1. Estudar seu Grim\u00f3rio para preparar mais feiti\u00e7os.\n2. Equipar-se e partir em dire\u00e7\u00e3o \u00e0 caverna.\n3. Testar suas novas habilidades com um teste de percep\u00e7\u00e3o ou investiga\u00e7\u00e3o em seu ambiente.\n\nQual \u00e9 sua escolha?"
+    },
+    {
+        "role": "user",
+        "content": "eu dou um soco na parde para levar dano e testar meu descanso magico"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea, decidido a testar sua armadura m\u00e1gica, se aproxima de uma das paredes de pedra do Observat\u00f3rio e d\u00e1 um soco com for\u00e7a. A superf\u00edcie \u00e9 dura e resistente, e voc\u00ea sente a dor percorrer sua m\u00e3o.\n\n**Role um d20 e adicione seu modificador de For\u00e7a** para ver o qu\u00e3o efetivo foi seu ataque e quanto dano voc\u00ea leva.\n\nLembre-se, seu modificador de For\u00e7a \u00e9 +0. \n\nO que voc\u00ea deseja fazer a seguir, ap\u00f3s fazer a rolagem?"
+    },
+    {
+        "role": "user",
+        "content": "20"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea d\u00e1 um soco forte na parede de pedra e, ao seu redor, o som do impacto ecoa pelo Observat\u00f3rio. Voc\u00ea sentiu a dor atravessar sua m\u00e3o, mas tamb\u00e9m sentiu a m\u00e1gica pulsando ao redor de voc\u00ea, como se sua \"Escudo Arcano\" estivesse absorvendo parte do impacto.\n\n**Role para ver quanto dano voc\u00ea leva**. Pode rolar um d4 para o dano. Lembre-se que seu soco n\u00e3o causar\u00e1 dano significativo, mas o impacto te dar\u00e1 uma no\u00e7\u00e3o de como sua armadura m\u00e1gica responde a danos f\u00edsicos. \n\nO que voc\u00ea deseja fazer a seguir?"
+    },
+    {
+        "role": "user",
+        "content": "4"
+    },
+    {
+        "role": "assistant",
+        "content": "Ao dar um soco forte na parede, voc\u00ea sente uma dor aguda na m\u00e3o e leva 4 pontos de dano. Contudo, sua \"Escudo Arcano\" absorve parte desse impacto, reduzindo o dano total que voc\u00ea receberia. Voc\u00ea percebe que a magia n\u00e3o s\u00f3 lhe proporciona prote\u00e7\u00e3o contra ataques m\u00e1gicos, mas tamb\u00e9m um suporte f\u00edsico quando necess\u00e1rio. \n\nAp\u00f3s a a\u00e7\u00e3o, voc\u00ea se concentra e sente que a magia ainda est\u00e1 muito viva dentro de voc\u00ea. Diante do seu teste, a energia m\u00e1gica parece pulsar, pronta para ser usada novamente.\n\nAgora que testou suas habilidades, quais s\u00e3o seus pr\u00f3ximos passos? Voc\u00ea pode:\n\n1. Preparar mais feiti\u00e7os do seu Grim\u00f3rio.\n2. Equipar-se e partir em dire\u00e7\u00e3o \u00e0 caverna.\n3. Investigar o ambiente ao seu redor.\n\nQual ser\u00e1 sua escolha?"
+    },
+    {
+        "role": "user",
+        "content": "quanto de dano eu levei?"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea levou 4 pontos de dano ap\u00f3s socar a parede. Isso significa que sua vida atual agora \u00e9 de 106, pois voc\u00ea tinha 110 pontos de vida m\u00e1xima.\n\nDiante disso, voc\u00ea ainda sente o poder do \"Escudo Arcano\" envolvendo voc\u00ea, protegendo-o da maioria dos impactos e permitindo que voc\u00ea teste seus limites.\n\nO que voc\u00ea gostaria de fazer a seguir? Voc\u00ea pode:\n\n1. Preparar mais feiti\u00e7os do seu Grim\u00f3rio.\n2. Equipar-se e partir em dire\u00e7\u00e3o \u00e0 caverna.\n3. Investigar o ambiente ao seu redor.\n\nQual ser\u00e1 sua escolha?"
+    },
+    {
+        "role": "user",
+        "content": "quantos slots eu tenho de magia?"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea ainda possui os seguintes slots de magia dispon\u00edveis:\n\n- **Truques (n\u00edvel 0):** 4 slots (ilimitados)\n- **C\u00edrculo 1:** 3 slots (Restam 3/4)\n- **C\u00edrculo 2:** 3 slots (Restam 3/3)\n- **C\u00edrculo 3:** 3 slots (Restam 3/3)\n- **C\u00edrculo 4:** 3 slots (Restam 3/3)\n- **C\u00edrculo 5:** 2 slots (Restam 2/2)\n- **C\u00edrculo 6:** 1 slot (Restam 1/1)\n- **C\u00edrculo 7:** 1 slot (Restam 1/1)\n- **C\u00edrculo 8:** 1 slot (Restam 1/1)\n- **C\u00edrculo 9:** 1 slot (Restam 1/1)\n\nVoc\u00ea est\u00e1 pronto para prosseguir. O que voc\u00ea gostaria de fazer agora? \n\nVoc\u00ea pode:\n\n1. Preparar mais feiti\u00e7os do seu Grim\u00f3rio.\n2. Equipar-se e partir em dire\u00e7\u00e3o \u00e0 caverna.\n3. Investigar o ambiente ao seu redor.\n\nQual ser\u00e1 sua escolha?"
+    },
+    {
+        "role": "user",
+        "content": "ola"
+    },
+    {
+        "role": "assistant",
+        "content": "Ol\u00e1! Como voc\u00ea deseja prosseguir com sua aventura? Aqui est\u00e3o algumas op\u00e7\u00f5es:\n\n1. Preparar mais feiti\u00e7os de seu Grim\u00f3rio.\n2. Equipar-se e partir em dire\u00e7\u00e3o \u00e0 caverna para buscar o \"Fragmento da Ess\u00eancia\".\n3. Investigar mais o ambiente ao seu redor.\n\nQual ser\u00e1 sua escolha?"
+    },
+    {
+        "role": "user",
+        "content": "3"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea decide investigar mais o ambiente ao seu redor. O Observat\u00f3rio de Galdor \u00e9 um lugar m\u00e1gico e cheio de segredos, e h\u00e1 certamente algo mais a ser descoberto.\n\nEnquanto voc\u00ea examina as paredes de pedra cobertas de musgo, as prateleiras empoeiradas cheias de grim\u00f3rios antigos e artefatos esquecidos, voc\u00ea nota um brilho sutil vindo de uma pequena estante \u00e0 sua esquerda. Ao se aproximar, voc\u00ea encontra um antigo amuleto que parece pulsar com energia m\u00e1gica.\n\nDesejando saber mais sobre este objeto, voc\u00ea pode fazer uma rolagem de Arcana para identificar suas propriedades e o que ele pode oferecer. Por favor, role um d20 e adicione seu modificador de Arcana. \n\nQual \u00e9 o seu modificador para essa per\u00edcia?"
+    },
+    {
+        "role": "user",
+        "content": "20"
+    },
+    {
+        "role": "assistant",
+        "content": "Ao observar o amuleto com aten\u00e7\u00e3o, voc\u00ea se concentra com sua habilidade m\u00e1gica e efetua uma an\u00e1lise detalhada. Sua mente r\u00e1pida e seu conhecimento profundo sobre o arcano permitem que voc\u00ea perceba que esse amuleto est\u00e1 imbu\u00eddo com magia de prote\u00e7\u00e3o. \n\nO amuleto parece oferecer vantagens em resistir a feiti\u00e7os e ataques m\u00e1gicos, podendo at\u00e9 mesmo proporcionar um b\u00f4nus em suas jogadas de salvamento contra efeitos m\u00e1gicos. Al\u00e9m disso, pode servir como um foco de canaliza\u00e7\u00e3o m\u00e1gica, permitindo que voc\u00ea utilize um feiti\u00e7o sem gastar um slot de magia ao custo de absorver uma parte de sua energia.\n\nSendo assim, voc\u00ea decidiu pegar o amuleto. Agora, ele se torna parte de seu equipamento. \n\nO que voc\u00ea gostaria de fazer a seguir? Voc\u00ea pode:\n\n1. Equipar o amuleto imediatamente.\n2. Preparar mais feiti\u00e7os do seu Grim\u00f3rio.\n3. Equipar-se e partir em dire\u00e7\u00e3o \u00e0 caverna.\n\nQual ser\u00e1 sua escolha?"
+    },
+    {
+        "role": "user",
+        "content": "eu coloco o amuleto no inventario"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea cuidadosamente coloca o amuleto em seu invent\u00e1rio, sabendo que ele pode ser uma poderosa adi\u00e7\u00e3o aos seus recursos m\u00e1gicos no futuro. \n\nAgora, com o amuleto seguro, voc\u00ea olha ao redor novamente, observando os outros itens no Observat\u00f3rio. Sabe que est\u00e1 em um local repleto de possibilidades e perigos.\n\nO que voc\u00ea gostaria de fazer a seguir? Voc\u00ea pode:\n\n1. Preparar mais feiti\u00e7os de seu Grim\u00f3rio.\n2. Equipar-se e partir em dire\u00e7\u00e3o \u00e0 caverna para procurar o \"Fragmento da Ess\u00eancia\".\n3. Continuar investigando o ambiente ao seu redor.\n\nQual ser\u00e1 sua escolha?"
+    },
+    {
+        "role": "user",
+        "content": "Equipo o amuleto"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea coloca o amuleto ao redor do pesco\u00e7o, sentindo a energia m\u00e1gica fluir atrav\u00e9s dele e envolver voc\u00ea com uma aura de prote\u00e7\u00e3o. O amuleto se encaixa confortavelmente, e voc\u00ea sente um leve formigamento que evidencia sua pot\u00eancia.\n\nAgora com sua nova prote\u00e7\u00e3o, voc\u00ea est\u00e1 preparado para o que vem a seguir.\n\nO que gostaria de fazer agora? Voc\u00ea pode:\n\n1. Preparar mais feiti\u00e7os do seu Grim\u00f3rio.\n2. Equipar-se e partir em dire\u00e7\u00e3o \u00e0 caverna para buscar o \"Fragmento da Ess\u00eancia\".\n3. Continuar investigando o Observat\u00f3rio.\n\nQual ser\u00e1 sua escolha?"
+    },
+    {
+        "role": "user",
+        "content": "lan\u00e7o um magic missel da parede para testar meu poder"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea se prepara para conjurar um *M\u00edssil M\u00e1gico* e mira na parede de pedra do Observat\u00f3rio. Esta magia \u00e9 sempre certeira, ent\u00e3o voc\u00ea s\u00f3 precisa gastar o slot e realizar a a\u00e7\u00e3o.\n\n**Gasta 1 slot de C\u00edrculo 1 (Restam 2/4)**.\n\nAgora, role um d20 para ver o impacto e a intensidade da magia!"
+    },
+    {
+        "role": "user",
+        "content": "20"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea conjura o *M\u00edssil M\u00e1gico* com precis\u00e3o e for\u00e7a, lembrando-se do poder que sua magia pode desferir. O feiti\u00e7o \u00e9 lan\u00e7ado com um toque de confian\u00e7a, e voc\u00ea observa os m\u00edsseis de energia arremessarem-se em dire\u00e7\u00e3o \u00e0 parede de pedra.\n\nOs m\u00edsseis atingem a parede com um impacto explosivo, criando uma pequena nuvem de poeira e pedregulhos. A parede n\u00e3o s\u00f3 \u00e9 atingida diretamente, mas tamb\u00e9m parece vibrar com a for\u00e7a da magia, reverberando em sua presen\u00e7a. A energia m\u00e1gica flui intensamente, parecendo at\u00e9 mesmo provocar uma resposta m\u00e1gica \u00e0 sua presen\u00e7a.\n\nPronto para mais a\u00e7\u00f5es, voc\u00ea refletiu sobre sua magia e a intera\u00e7\u00e3o com o ambiente.\n\nAgora, o que voc\u00ea gostaria de fazer a seguir? Voc\u00ea pode:\n\n1. Preparar mais feiti\u00e7os do seu Grim\u00f3rio.\n2. Equipar-se e partir em dire\u00e7\u00e3o \u00e0 caverna em busca do \"Fragmento da Ess\u00eancia\".\n3. Continuar explorando o Observat\u00f3rio.\n\nQual ser\u00e1 sua escolha?\n\n**Atualiza\u00e7\u00e3o de slots:**\n```json\n{\n  \"spell_slots\": {\n    \"1\": { \"total\": 4, \"usado\": 1 }\n  }\n}\n```"
+    },
+    {
+        "role": "user",
+        "content": "ativo a Imagem espelhada para testar"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea decide lan\u00e7ar *Imagem Espelhada* para criar c\u00f3pias ilus\u00f3rias de si mesmo. Concentra-se e conjura a magia com facilidade, permitindo que a energia m\u00e1gica flua atrav\u00e9s de voc\u00ea.\n\n**Gasta 1 slot de C\u00edrculo 2 (Restam 2/3)**.\n\nAssim que a magia \u00e9 lan\u00e7ada, tr\u00eas c\u00f3pias ilus\u00f3rias de voc\u00ea surgem, parecendo quase id\u00eanticas. Elas se movimentam com voc\u00ea, fazendo parecer que voc\u00ea \u00e9 o verdadeiro l\u00edder. Voc\u00ea sente a prote\u00e7\u00e3o adicional que essas imagens proporcionam, caso algo inesperado aconte\u00e7a.\n\nAgora, com a magia ativa, o que voc\u00ea gostaria de fazer a seguir? Voc\u00ea pode:\n\n1. Preparar mais feiti\u00e7os do seu Grim\u00f3rio.\n2. Equipar-se e partir em dire\u00e7\u00e3o \u00e0 caverna para buscar o \"Fragmento da Ess\u00eancia\".\n3. Continuar explorando o Observat\u00f3rio.\n\nQual ser\u00e1 sua escolha?\n\n**Atualiza\u00e7\u00e3o de slots:**\n```json\n{\n  \"spell_slots\": {\n    \"2\": { \"total\": 3, \"usado\": 1 }\n  }\n}\n```"
+    },
+    {
+        "role": "user",
+        "content": "eu desativo e ativo denovo"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea desativa *Imagem Espelhada* e, em seguida, a ativa novamente. Com a magia em vigor, as c\u00f3pias ilus\u00f3rias de voc\u00ea surgem mais uma vez, criando uma sensa\u00e7\u00e3o de seguran\u00e7a e confus\u00e3o para qualquer um que possa tentar atac\u00e1-lo. As quatro formas de voc\u00ea agora dan\u00e7am ao seu redor, assegurando uma prote\u00e7\u00e3o m\u00e1gica.\n\n**Gasta 1 slot de C\u00edrculo 2 (Restam 1/3)**.\n\nAgora, envolto por suas ilus\u00f5es, voc\u00ea se sente mais preparado para enfrentar os desafios que est\u00e3o por vir. O que voc\u00ea gostaria de fazer a seguir? Voc\u00ea pode:\n\n1. Preparar mais feiti\u00e7os do seu Grim\u00f3rio.\n2. Equipar-se e partir em dire\u00e7\u00e3o \u00e0 caverna para buscar o \"Fragmento da Ess\u00eancia\".\n3. Continuar explorando o Observat\u00f3rio.\n\nQual ser\u00e1 sua escolha?\n\n**Atualiza\u00e7\u00e3o de slots:**\n```json\n{\n  \"spell_slots\": {\n    \"2\": { \"total\": 3, \"usado\": 2 }\n  }\n}\n```"
+    },
+    {
+        "role": "user",
+        "content": "ativo a armadura arcana, spell de nivel 1"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea se concentra e conjura *Armadura Arcana*, envolvendo-se em uma aura protetora de energia m\u00e1gica. Instantaneamente, voc\u00ea sente um aumento na sua prote\u00e7\u00e3o m\u00e1gica, como se uma armadura invis\u00edvel fosse colocada sobre voc\u00ea.\n\n**Gasta 1 slot de C\u00edrculo 1 (Restam 1/4)**.\n\nCom sua nova defesa, voc\u00ea est\u00e1 preparado para qualquer desafio que possa surgir. As c\u00f3pias ilus\u00f3rias de voc\u00ea dan\u00e7am ao seu redor enquanto voc\u00ea se sente mais confiante que nunca.\n\nO que voc\u00ea gostaria de fazer a seguir? Voc\u00ea pode:\n\n1. Preparar mais feiti\u00e7os do seu Grim\u00f3rio.\n2. Equipar-se e partir em dire\u00e7\u00e3o \u00e0 caverna para buscar o \"Fragmento da Ess\u00eancia\".\n3. Continuar explorando o Observat\u00f3rio.\n\nQual ser\u00e1 sua escolha?\n\n**Atualiza\u00e7\u00e3o de slots:**\n```json\n{\n  \"spell_slots\": {\n    \"1\": { \"total\": 4, \"usado\": 2 },\n    \"2\": { \"total\": 3, \"usado\": 2 }\n  }\n}\n```"
+    },
+    {
+        "role": "user",
+        "content": "quantos slots de magia eu tenho?"
+    },
+    {
+        "role": "assistant",
+        "content": "Atualmente, voc\u00ea tem os seguintes slots de magia dispon\u00edveis:\n\n- **C\u00edrculo 1**: 4 slots (2 usados)\n- **C\u00edrculo 2**: 3 slots (2 usados)\n\nAgora, com essas informa\u00e7\u00f5es \u00e0 disposi\u00e7\u00e3o, o que voc\u00ea gostaria de fazer a seguir? Voc\u00ea pode:\n\n1. Preparar mais feiti\u00e7os do seu Grim\u00f3rio.\n2. Equipar-se e partir em dire\u00e7\u00e3o \u00e0 caverna para buscar o \"Fragmento da Ess\u00eancia\".\n3. Continuar explorando o Observat\u00f3rio.\n\nQual ser\u00e1 sua escolha?\n\n**Atualiza\u00e7\u00e3o de slots:**\n```json\n{\n  \"spell_slots\": {\n    \"1\": { \"total\": 4, \"usado\": 2 },\n    \"2\": { \"total\": 3, \"usado\": 2 }\n  }\n}\n```"
+    },
+    {
+        "role": "user",
+        "content": "eu uso minha magia de level 7: Teletransporte longo, e me teletransporto para a sala do antigo rei mago"
+    },
+    {
+        "role": "assistant",
+        "content": "Voc\u00ea se prepara para conjurar *Teletransporte Longo*, focando sua magia e concentrando sua inten\u00e7\u00e3o em chegar \u00e0 sala do antigo rei mago. Com um gesto e uma vocaliza\u00e7\u00e3o clara, voc\u00ea libera a energia m\u00e1gica que transporta seu corpo atrav\u00e9s do espa\u00e7o.\n\n**Gasta 1 slot de C\u00edrculo 7 (Restam 0/1)**.\n\nEm um piscar de olhos, voc\u00ea se v\u00ea na sala do antigo rei mago. O ambiente \u00e9 majestoso, com paredes adornadas por tape\u00e7arias que representam grandes feitos de magia e batalhas \u00e9picas. No centro da sala, uma grande mesa de feiti\u00e7aria feita de madeira antiga est\u00e1 coberta de pergaminhos e grim\u00f3rios.\n\nAo se familiarizar com seu novo espa\u00e7o, voc\u00ea percebe que ainda h\u00e1 ar de magia antiga pairando no ambiente. O que voc\u00ea gostaria de fazer agora?\n\n1. Examinar a mesa de feiti\u00e7aria e os grim\u00f3rios.\n2. Procurar por algum artefato m\u00e1gico na sala.\n3. Sair da sala e explorar o restante do castelo.\n\n**Atualiza\u00e7\u00e3o de slots:**\n```json\n{\n  \"spell_slots\": {\n    \"7\": { \"total\": 1, \"usado\": 1 }\n  }\n}\n```"
+    },
+    {
+        "role": "user",
+        "content": "quais slots de magia eu tenho?"
+    },
+    {
+        "role": "assistant",
+        "content": "Atualmente, voc\u00ea possui os seguintes slots de magia dispon\u00edveis:\n\n- **C\u00edrculo 1**: 4 slots (2 usados)\n- **C\u00edrculo 2**: 3 slots (2 usados)\n- **C\u00edrculo 7**: 1 slot (1 usado)\n\nCom essa informa\u00e7\u00e3o em mente, o que voc\u00ea gostaria de fazer na sala do antigo rei mago? Voc\u00ea pode:\n\n1. Examinar a mesa de feiti\u00e7aria e os grim\u00f3rios.\n2. Procurar por algum artefato m\u00e1gico na sala.\n3. Sair da sala e explorar o restante do castelo.\n\nQual ser\u00e1 sua escolha? \n\n```json\n{\n  \"spell_slots\": {\n    \"1\": { \"total\": 4, \"usado\": 2 },\n    \"2\": { \"total\": 3, \"usado\": 2 },\n    \"7\": { \"total\": 1, \"usado\": 1 }\n  }\n}\n```"
+    }
+]

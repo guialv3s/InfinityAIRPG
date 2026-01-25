@@ -61,6 +61,11 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     loadHistory();
     loadSidebarCampaigns(); // Load campaigns for the sidebar list
+
+    // Initialize inventory sidebar after auth is ready
+    if (window.initSidebar) {
+        window.initSidebar();
+    }
 });
 
 // --- View Functions ---
@@ -215,6 +220,15 @@ async function sendMessage() {
 
         if (data.response) {
             await appendMessage(data.response, 'bot', true);
+
+            // Refresh sidebar AFTER message is fully displayed
+            // Add delay to ensure backend has processed the JSON
+            setTimeout(() => {
+                if (window.refreshSidebar) {
+                    console.log('[GAME] Refreshing sidebar after AI response');
+                    window.refreshSidebar();
+                }
+            }, 500);
         } else if (data.error) {
             await appendMessage("Erro do Servidor: " + data.error, 'bot');
             const msg = Array.isArray(data.detail) ? data.detail[0].msg : JSON.stringify(data.detail);
@@ -313,26 +327,27 @@ function appendMessage(text, sender, typewriter = false) {
 sendBtn.addEventListener('click', sendMessage);
 userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
 
-statusBtn.addEventListener('click', async () => {
-    openModal(statusModal);
-    statusContent.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+// Status button removed - inventory is now always visible in sidebar
+// statusBtn.addEventListener('click', async () => {
+//     openModal(statusModal);
+//     statusContent.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
 
-    try {
-        const response = await fetch('/chat', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                message: "!status",
-                user_id: parseInt(currentUser.user_id),
-                campaign_id: currentCampaignId
-            })
-        });
-        const data = await response.json();
-        statusContent.innerText = data.response || "Erro.";
-    } catch (e) {
-        statusContent.innerText = "Erro de conexão.";
-    }
-});
+//     try {
+//         const response = await fetch('/chat', {
+//             method: 'POST',
+//             headers: { 'Content-Type': 'application/json' },
+//             body: JSON.stringify({
+//                 message: "!status",
+//                 user_id: parseInt(currentUser.user_id),
+//                 campaign_id: currentCampaignId
+//             })
+//         });
+//         const data = await response.json();
+//         statusContent.innerText = data.response || "Erro.";
+//     } catch (e) {
+//         statusContent.innerText = "Erro de conexão.";
+//     }
+// });
 
 resetBtn.addEventListener('click', () => {
     openModal(resetModal);
