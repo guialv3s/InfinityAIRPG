@@ -66,6 +66,8 @@ async function loadSidebarData() {
         currentGameMode = (player.modo || 'narrativo').toLowerCase();
         console.log('[SIDEBAR] Game mode:', currentGameMode);
 
+        updateUIMode(currentGameMode); // Apply UI Fixes
+
         populateSidebar(player);
     } catch (error) {
         console.error('[SIDEBAR] Error loading sidebar data:', error);
@@ -101,19 +103,19 @@ function populateStats(player) {
 
     let statsHTML = '';
 
+    // ALWAYS SHOW HP + GOLD (User Request)
+    statsHTML += createStatBox('❤️ HP', `${inv.vida_atual || 0}/${inv.vida_maxima || 0}`, 'hp');
+
     if (modo.includes('narrativo')) {
-        // Narrativo: Minimal stats
+        // Narrativo: Just HP and Gold
         statsHTML += createStatBox('💰 Ouro', inv.ouro || 0);
     } else if (modo.includes('dados') || modo.includes('rolagem')) {
         // Rolagem de Dados: Vida e Ouro
-        statsHTML += createStatBox('❤️ HP', `${inv.vida_atual || 0}/${inv.vida_maxima || 0}`, 'hp');
         statsHTML += createStatBox('💰 Ouro', inv.ouro || 0);
     } else {
         // D&D 5E: HP, AC, Ouro
         const dexMod = Math.floor(((player.atributos?.destreza || 10) - 10) / 2);
         const ac = 10 + dexMod;
-
-        statsHTML += createStatBox('❤️ HP', `${inv.vida_atual || 0}/${inv.vida_maxima || 0}`, 'hp');
         statsHTML += createStatBox('🛡️ AC', ac);
         statsHTML += createStatBox('💰 Ouro', inv.ouro || 0, 'gold');
     }
@@ -145,6 +147,27 @@ function populateStats(player) {
     }
 
     statsDisplay.innerHTML = statsHTML;
+}
+
+function updateUIMode(modo) {
+    // UI Cleanup for Narrative Mode (Hide Grimoire & Footer Space)
+    const grimoireTabBtn = document.querySelector('.sidebar-tab[data-tab="grimorio"]');
+    // FIX: Target only the inventory sidebar footer, avoiding the app-sidebar footer (logout/profile)
+    const footerSpace = document.querySelector('#inventory-sidebar .sidebar-footer');
+
+    if (modo.includes('narrativo')) {
+        if (grimoireTabBtn) grimoireTabBtn.style.display = 'none';
+        if (footerSpace) footerSpace.style.display = 'none';
+
+        // Also ensure we are not on the masked tab
+        const activeTab = document.querySelector('.sidebar-tab.active');
+        if (activeTab && activeTab.dataset.tab === 'grimorio') {
+            document.querySelector('.sidebar-tab[data-tab="inventory"]').click();
+        }
+    } else {
+        if (grimoireTabBtn) grimoireTabBtn.style.display = 'flex'; // or block/flex
+        if (footerSpace) footerSpace.style.display = 'block';
+    }
 }
 
 function createStatBox(label, value, type = '') {

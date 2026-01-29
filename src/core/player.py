@@ -308,8 +308,17 @@ def interpretar_e_atualizar_estado(resposta: str, user_id: int, campaign_id: str
 
     # Regex more permissive: optional "json" after backticks
     # Also capture content
+    # Regex more permissive: optional "json" after backticks, or just braces if backticks missing
+    # Supports ```json {...} ```, ``` {...} ```, or just {...} if it looks like a valid root object
     json_matches = re.findall(r"```(?:json)?(.*?)```", resposta, re.DOTALL)
     
+    if not json_matches:
+        # Fallback: Try to find a JSON block without backticks (start with { "inventario": or { "magias": )
+        # This is riskier but catches "lazy" AI
+        loose_match = re.search(r'(\{[\s\n]*"(?:inventario|magias|status|atributos|spell_slots)".*?\})', resposta, re.DOTALL)
+        if loose_match:
+            json_matches = [loose_match.group(1)]
+
     if json_matches:
         try:
             print(f"DEBUG: Encontrado bloco JSON na resposta de tamanho {len(json_matches[0])}")
@@ -446,8 +455,26 @@ def interpretar_e_atualizar_estado(resposta: str, user_id: int, campaign_id: str
                 print(f"DEBUG: Received atributos: {data['atributos']}")
                 # Do NOT modify player["atributos"] here
 
+            # --- INTELLIGENT SPELL MERGE ---
             if "magias" in data:
-                player["magias"] = data["magias"]
+                new_magias = data["magias"]
+                existing_magias = player.get("magias", [])
+                
+                if not new_magias:
+                     pass # Empty list? Don't wipe.
+                else:
+                    # Create Map of existing names
+                    existing_map = {m.get("nome", "").lower(): m for m in existing_magias}
+                    
+                    for magia in new_magias:
+                        if isinstance(magia, dict):
+                            name = magia.get("nome", "").lower()
+                            if name:
+                                existing_map[name] = magia # Update or Add
+                    
+                    # Convert back to list
+                    player["magias"] = list(existing_map.values())
+                    print(f"INFO: Magias mescladas. Total: {len(player['magias'])}")
 
             if "status" in data:
                 player["status"] = data["status"]
@@ -726,12 +753,9 @@ def generate_initial_stats(classe: str, raca: str, tema: str) -> dict:
 
     # --- 4. Theme & Magic Logic ---
     tema_lower = tema.lower()
-    magic_prohibited_themes = ["zumbi", "zombie", "apocalipse", "realista", "segunda guerra", "ww2", "velho oeste", "cyberpunk", "sci-fi"]
+    magic_prohibited_themes = ["zumbi", "zombie", "apocalipse", "realista", "segunda guerra", "ww2", "velho oeste", "cyberpunk", "sci-fi", "investigação", "policial"]
     
-    # Check if theme prohibits magic (unless it's a specific "Cyberpunk Fantasy" e.g. Shadowrun, but let's be strict for now based on keywords)
-    # Actually, verify if "magic" keywords are NOT present if prohibited keywords ARE present?
-    # Simple logic: If theme looks realistic/sci-fi, nuking spells.
-    
+    # Check if theme prohibits magic (unless it's a specific "Cyberpunk Fantasy" e.g. Shadowrun)
     is_magic_allowed = True
     for p_theme in magic_prohibited_themes:
         if p_theme in tema_lower:
@@ -739,15 +763,14 @@ def generate_initial_stats(classe: str, raca: str, tema: str) -> dict:
             break
             
     # Exception: "zumbi + magia" (Necromancy theme)
-    if "magia" in tema_lower or "rpg" in tema_lower or "d&d" in tema_lower or "fantasy" in tema_lower:
+    if "magia" in tema_lower or "rpg" in tema_lower or "d&d" in tema_lower or "fantasy" in tema_lower or "fantasioso" in tema_lower:
         is_magic_allowed = True
 
     if not is_magic_allowed:
         magias = [] 
-        # Convert MP to "Energy" or "Stamina" maybe? Or just 0.
-        # Let's keep MP as 0 for non-magic settings generally, or rename? 
-        # The system expects "mana", so let's just set to 0 or low stamina.
-        if mp > 20: mp = 20 # Low "stamina" cap
+        mp = 0 # STRICT: No mana for non-magic themes (User Request)
+        # Remove any mana potions or scrolls
+        items = [i for i in items if "mana" not in i["item"].lower() and "grimório" not in i["item"].lower()]
 
     return {
         "atributos": stats,

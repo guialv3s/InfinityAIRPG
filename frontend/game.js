@@ -44,6 +44,8 @@ let currentCampaignId = null;
 
 // --- Init ---
 document.addEventListener('DOMContentLoaded', async () => {
+    initModalSystem(); // Initialize modal system from shared
+
     const user = await checkAuth();
     if (!user) return; // checkAuth handles redirect
 
@@ -66,38 +68,18 @@ document.addEventListener('DOMContentLoaded', async () => {
     if (window.initSidebar) {
         window.initSidebar();
     }
+
+    // Setup all event listeners after DOM is ready
+    setupEventListeners();
 });
-
-// --- View Functions ---
-function openModal(modal) {
-    if (modalOverlay) modalOverlay.classList.remove('hidden');
-    if (modal) modal.classList.remove('hidden');
-}
-
-function closeModal() {
-    if (modalOverlay) modalOverlay.classList.add('hidden');
-    if (statusModal) statusModal.classList.add('hidden');
-    if (resetModal) resetModal.classList.add('hidden');
-    if (userModal) userModal.classList.add('hidden');
-    if (creationModal) creationModal.classList.add('hidden');
-    if (deleteModal) deleteModal.classList.add('hidden');
-    if (sidebar) sidebar.classList.add('hidden');
-    if (mainContent) mainContent.classList.remove('sidebar-open');
-}
-
-if (modalOverlay) modalOverlay.addEventListener('click', closeModal);
-closeButtons.forEach(btn => btn.addEventListener('click', closeModal));
 
 // --- Logic ---
 
 async function loadSidebarCampaigns() {
     try {
-        sidebarCampaignList.innerHTML = '<div style="color: #aaa; padding: 10px;">Carregando...</div>';
-        const response = await fetch('/campaigns', {
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-        });
-        const data = await response.json();
-        const campaigns = data.campaigns;
+        sidebarCampaignList.innerHTML = '<div style="color: #aaa; padding: 10px; text-align: center;">Carregando...</div>';
+
+        const campaigns = await fetchCampaigns();
 
         sidebarCampaignList.innerHTML = '';
         if (campaigns && campaigns.length > 0) {
@@ -116,7 +98,7 @@ async function loadSidebarCampaigns() {
                 el.addEventListener('click', (e) => {
                     if (e.target.closest('.delete-btn-mini')) return;
                     if (camp.id != currentCampaignId) {
-                        window.location.href = `game.html?campaign_id=${camp.id}`;
+                        navigateToCampaign(camp.id);
                     }
                 });
 
@@ -124,17 +106,29 @@ async function loadSidebarCampaigns() {
                 const delBtn = el.querySelector('.delete-btn-mini');
                 delBtn.addEventListener('click', async (e) => {
                     e.stopPropagation();
-                    campaignToDeleteId = camp.id; // Store ID
-                    openModal(deleteModal); // Open Modal
+
+                    const confirmed = await confirmDialog(
+                        `Tem certeza que deseja excluir "${camp.name}"?`,
+                        'Sim, Excluir',
+                        'Cancelar'
+                    );
+
+                    if (confirmed) {
+                        const success = await deleteCampaign(camp.id);
+                        if (success) {
+                            loadSidebarCampaigns(); // Reload list
+                        }
+                    }
                 });
 
                 sidebarCampaignList.appendChild(el);
             });
         } else {
-            sidebarCampaignList.innerHTML = '<div style="color: #aaa; padding: 10px;">Nenhuma campanha.</div>';
+            sidebarCampaignList.innerHTML = '<div style="color: #aaa; padding: 10px; text-align: center;">Nenhuma campanha.</div>';
         }
     } catch (e) {
         console.error("Failed to load campaigns", e);
+        sidebarCampaignList.innerHTML = '<div style="color: #ff4d4d; padding: 10px; text-align: center;">Erro ao carregar campanhas.</div>';
     }
 }
 
@@ -322,178 +316,198 @@ function appendMessage(text, sender, typewriter = false) {
     });
 }
 
-// --- Event Listeners ---
+// --- Event Listeners Setup ---
+function setupEventListeners() {
+    // Chat
+    sendBtn.addEventListener('click', sendMessage);
+    userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
 
-sendBtn.addEventListener('click', sendMessage);
-userInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') sendMessage(); });
+    // Reset Button
+    if (resetBtn) {
+        resetBtn.addEventListener('click', () => {
+            openModal(resetModal);
+        });
+    }
 
-// Status button removed - inventory is now always visible in sidebar
-// statusBtn.addEventListener('click', async () => {
-//     openModal(statusModal);
-//     statusContent.innerHTML = '<div class="typing-indicator"><span></span><span></span><span></span></div>';
+    if (cancelResetBtn) cancelResetBtn.addEventListener('click', closeAllModals);
+    if (confirmResetBtn) {
+        confirmResetBtn.addEventListener('click', async () => {
+            try {
+                // Delete current campaign
+                await deleteCampaign(currentCampaignId);
 
-//     try {
-//         const response = await fetch('/chat', {
-//             method: 'POST',
-//             headers: { 'Content-Type': 'application/json' },
-//             body: JSON.stringify({
-//                 message: "!status",
-//                 user_id: parseInt(currentUser.user_id),
-//                 campaign_id: currentCampaignId
-//             })
-//         });
-//         const data = await response.json();
-//         statusContent.innerText = data.response || "Erro.";
-//     } catch (e) {
-//         statusContent.innerText = "Erro de conexão.";
-//     }
-// });
+                closeAllModals();
+                messagesDiv.innerHTML = '';
 
-resetBtn.addEventListener('click', () => {
-    openModal(resetModal);
-});
+                // Remove campaign_id from URL without refreshing
+                const url = new URL(window.location);
+                url.searchParams.delete('campaign_id');
+                window.history.pushState({}, '', url);
 
-if (cancelResetBtn) cancelResetBtn.addEventListener('click', closeModal);
-if (confirmResetBtn) confirmResetBtn.addEventListener('click', async () => {
+                // Open Creation Modal using shared modal
+                if (window.openCharacterCreationModal) {
+                    window.openCharacterCreationModal(handleGameCreationSubmit);
+                }
+            } catch (e) {
+                alert("Erro ao resetar: " + e);
+            }
+        });
+    }
+
+    // Sidebar & Menus
+    if (menuBtn) {
+        menuBtn.addEventListener('click', () => {
+            sidebar.classList.remove('hidden');
+            sidebar.classList.add('active');
+            mainContent.classList.toggle('sidebar-open');
+            if (modalOverlay) modalOverlay.classList.remove('hidden');
+        });
+    }
+
+    if (closeSidebar) closeSidebar.addEventListener('click', closeAllModals);
+
+    if (backToDashboardBtn) {
+        backToDashboardBtn.addEventListener('click', () => {
+            window.location.href = 'dashboard.html';
+        });
+    }
+
+    // Sidebar New Campaign
+    if (sidebarNewCampaignBtn) {
+        sidebarNewCampaignBtn.addEventListener('click', () => {
+            if (window.openCharacterCreationModal) {
+                window.openCharacterCreationModal(handleGameCreationSubmit);
+            }
+        });
+    }
+
+    // User Profile Trigger
+    if (userProfileTrigger) {
+        userProfileTrigger.addEventListener('click', () => {
+            if (currentUser) {
+                profileUsername.value = currentUser.username;
+                profileEmail.value = currentUser.email || 'N/A';
+                openModal(userModal);
+            }
+        });
+    }
+
+    if (logoutBtn) logoutBtn.addEventListener('click', () => { logout(); });
+
+    // Delete Modal Actions (already using confirmDialog in loadSidebarCampaigns, keeping this for fallback)
+    if (confirmDeleteBtn) {
+        confirmDeleteBtn.addEventListener('click', async () => {
+            if (!campaignToDeleteId) return;
+
+            try {
+                await fetch(`/campaigns/${campaignToDeleteId}`, {
+                    method: 'DELETE',
+                    headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+                });
+
+                closeAllModals();
+
+                // If we deleted the current campaign, go to dashboard
+                if (campaignToDeleteId == currentCampaignId) {
+                    window.location.href = 'dashboard.html';
+                } else {
+                    // Otherwise reload the sidebar list
+                    loadSidebarCampaigns();
+                }
+            } catch (e) {
+                alert("Erro ao excluir campanha.");
+            }
+        });
+    }
+
+    if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', closeAllModals);
+}
+
+
+// --- Callback for Game JS creation ---
+async function handleGameCreationSubmit(charData) {
     try {
-        // Updated Logic: Delete campaign and open new campaign modal
-        await fetch(`/campaigns/${currentCampaignId}`, {
-            method: 'DELETE',
-            headers: { 'Authorization': `Bearer ${getAuthToken()}` }
+        const response = await fetch('/campaigns', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${getAuthToken()}`
+            },
+            body: JSON.stringify({
+                user_id: parseInt(currentUser.user_id),
+                ...charData
+            })
         });
 
-        closeModal();
-        messagesDiv.innerHTML = '';
+        const data = await response.json();
 
-        // Remove campaign_id from URL without refreshing
-        const url = new URL(window.location);
-        url.searchParams.delete('campaign_id');
-        window.history.pushState({}, '', url);
+        if (data.campaign_id) {
+            // Reload to load the new campaign
+            window.location.search = `?campaign_id=${data.campaign_id}`;
+        } else {
+            console.error("Erro na criação:", data);
+            let msg = "Erro desconhecido";
+            if (data.error) msg = data.error;
+            else if (data.detail) msg = JSON.stringify(data.detail);
 
-        // Open Creation Modal
-        openModal(creationModal);
-
-        // Prevent closing sidebar if it acts as background
-        // ...
-
-    } catch (e) {
-        alert("Erro ao resetar: " + e);
+            throw new Error(msg);
+        }
+    } catch (error) {
+        throw error;
     }
-});
-
-// Sidebar & Menus
-menuBtn.addEventListener('click', () => {
-    sidebar.classList.remove('hidden');
-    sidebar.classList.add('active'); // Ensure CSS handles this if needed, or just remove hidden
-    mainContent.classList.toggle('sidebar-open');
-    if (modalOverlay) modalOverlay.classList.remove('hidden'); // Use overlay for focus
-});
-
-if (closeSidebar) closeSidebar.addEventListener('click', closeModal);
-
-if (backToDashboardBtn) {
-    backToDashboardBtn.addEventListener('click', () => {
-        window.location.href = 'dashboard.html';
-    });
 }
 
-// Sidebar New Campaign
-if (sidebarNewCampaignBtn) {
-    sidebarNewCampaignBtn.addEventListener('click', () => {
-        // If on sidebar on mobile, maybe close sidebar or keep it?
-        // Let's close sidebar on mobile but overlay is needed for modal.
-        // Actually, just opening modal over sidebar works because of z-index.
-        openModal(creationModal);
+
+// Initialize Dice Roller Logic
+if (window.initDiceRoller) {
+    // Start collapsed logic
+    const diceContainer = document.getElementById('dice-container');
+    const diceTrigger = document.getElementById('dice-trigger');
+    const closeBtn = document.getElementById('dice-close-btn');
+
+    // Initially collapsed? Yes, consistent with HTML
+
+    let diceInitialized = false;
+
+    if (diceTrigger) {
+        diceTrigger.addEventListener('click', () => {
+            // Open
+            diceContainer.classList.remove('collapsed');
+            diceContainer.style.height = '200px';
+            diceTrigger.style.display = 'none';
+
+            // Lazy Init or Resize
+            setTimeout(() => {
+                if (!diceInitialized) {
+                    console.log("Lazy initializing Dice Roller...");
+                    initDiceRoller('dice-scene-root'); // Use sub-container
+                    diceInitialized = true;
+                } else {
+                    console.log("Resizing Dice Roller...");
+                    window.dispatchEvent(new Event('resize'));
+                }
+            }, 550);
+        });
+    }
+
+    // Listen for JS-dispatched close event from dice_3d.js
+    window.addEventListener('dice-close-request', () => {
+        diceContainer.classList.add('collapsed');
+        diceContainer.style.height = '0px';
+        diceTrigger.style.display = 'flex';
     });
+
+    if (closeBtn) {
+        closeBtn.addEventListener('click', (e) => {
+            e.stopPropagation(); // Prevent propagation
+            // Close
+            diceContainer.classList.add('collapsed');
+            diceContainer.style.height = '0px';
+            diceTrigger.style.display = 'flex'; // Show trigger again
+        });
+    }
+
+    // Init once on load to ensure it's ready (even if hidden)
+    // initDiceRoller('dice-container'); 
+    // Optimization: Don't render if hidden. Wait for click.
 }
-
-// Creation Form Logic (Copied from dashboard.js)
-if (creationForm) {
-    creationForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-
-        const submitBtn = creationForm.querySelector('button[type="submit"]');
-        const originalText = submitBtn.innerText;
-
-        // Use new helper
-        const charData = window.getCharacterData();
-        if (!charData) return;
-
-        // Loading State
-        submitBtn.innerHTML = '<div class="typing-indicator" style="display: flex; justify-content: center; align-items: center;"><span></span><span></span><span></span></div>';
-        submitBtn.disabled = true;
-
-        try {
-            const response = await fetch('/campaigns', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${getAuthToken()}`
-                },
-                body: JSON.stringify({
-                    user_id: parseInt(currentUser.user_id),
-                    ...charData
-                })
-            });
-
-            const data = await response.json();
-
-            if (data.campaign_id) {
-                // Reload to load the new campaign
-                window.location.search = `?campaign_id=${data.campaign_id}`;
-            } else {
-                console.error("Erro na criação:", data);
-                let msg = "Erro desconhecido";
-                if (data.error) msg = data.error;
-                else if (data.detail) msg = JSON.stringify(data.detail);
-
-                alert("Erro ao criar campanha: " + msg);
-                submitBtn.innerText = originalText;
-                submitBtn.disabled = false;
-            }
-        } catch (error) {
-            alert("Erro ao conectar ao servidor.");
-            submitBtn.innerText = originalText;
-            submitBtn.disabled = false;
-        }
-    });
-}
-
-// User Profile Trigger
-if (userProfileTrigger) {
-    userProfileTrigger.addEventListener('click', () => {
-        profileUsername.value = currentUser.username;
-        profileEmail.value = currentUser.email;
-        openModal(userModal);
-    });
-}
-
-if (logoutBtn) logoutBtn.addEventListener('click', () => { logout(); });
-
-// Delete Modal Actions
-if (confirmDeleteBtn) {
-    confirmDeleteBtn.addEventListener('click', async () => {
-        if (!campaignToDeleteId) return;
-
-        try {
-            await fetch(`/campaigns/${campaignToDeleteId}`, {
-                method: 'DELETE',
-                headers: { 'Authorization': `Bearer ${getAuthToken()}` }
-            });
-
-            closeModal();
-
-            // If we deleted the current campaign, go to dashboard
-            if (campaignToDeleteId == currentCampaignId) {
-                window.location.href = 'dashboard.html';
-            } else {
-                // Otherwise reload the sidebar list
-                loadSidebarCampaigns();
-            }
-        } catch (e) {
-            alert("Erro ao excluir campanha.");
-        }
-    });
-}
-
-if (cancelDeleteBtn) cancelDeleteBtn.addEventListener('click', closeModal);

@@ -1,0 +1,134 @@
+{
+    "nome": "Guilherme",
+    "raca": "Humano",
+    "classe": "Mago",
+    "tema": "Fantasia magica",
+    "modo": "dnd5e",
+    "historia": "Mago que acabou de entrar apra a academia arcana.",
+    "nivel": 1,
+    "experiencia": 0,
+    "atributos": {
+        "forca": 10,
+        "destreza": 12,
+        "constituicao": 12,
+        "inteligencia": 16,
+        "sabedoria": 16,
+        "carisma": 11
+    },
+    "inventario": {
+        "ouro": 20,
+        "vida_atual": 9,
+        "vida_maxima": 9,
+        "itens": [
+            {
+                "nome": "Grim\u00f3rio de Aprendiz",
+                "descricao": "Livro de capa de couro com p\u00e1ginas onde Guilherme anota feiti\u00e7os, esquemas e observa\u00e7\u00f5es das aulas.",
+                "quantidade": 1
+            },
+            {
+                "nome": "Cajado de Aprendiz",
+                "descricao": "Um cajado simples, polido, usado como foco arcano e apoio. Tem runas de iniciante gravadas na ponta.",
+                "quantidade": 1,
+                "buffs": {
+                    "inteligencia": 1
+                }
+            },
+            {
+                "nome": "T\u00fanica da Academia",
+                "descricao": "T\u00fanica leve com o bras\u00e3o da academia. Oferece apar\u00eancia profissional e alguma resist\u00eancia a sujeira e desgastes.",
+                "quantidade": 1
+            },
+            {
+                "nome": "Bolsa de Componentes",
+                "descricao": "Bolsa com pequenos componentes (areia magn\u00e9tica, ervas secas, ossos envernizados) usados para lan\u00e7ar feiti\u00e7os.",
+                "quantidade": 1
+            },
+            {
+                "nome": "Pena e Tinteiro",
+                "descricao": "Ferramentas para anotar f\u00f3rmulas no grim\u00f3rio e copiar pergaminhos.",
+                "quantidade": 1
+            },
+            {
+                "nome": "Pergaminhos de Notas",
+                "descricao": "Folhas soltas com anota\u00e7\u00f5es das aulas e experimentos (algumas f\u00f3rmulas rabiscadas).",
+                "quantidade": 5
+            },
+            {
+                "nome": "Amuleto de Matr\u00edcula",
+                "descricao": "Pequeno medalh\u00e3o emitido pela Academia Arcana que identifica Guilherme como estudante e d\u00e1 acesso \u00e0s alas comuns.",
+                "quantidade": 1,
+                "buffs": {
+                    "carisma": 1
+                }
+            },
+            {
+                "nome": "Ra\u00e7\u00f5es (r\u00e1cio de viagem)",
+                "descricao": "Provis\u00f5es para emerg\u00eancias em viagens curtas.",
+                "quantidade": 2
+            },
+            {
+                "nome": "Po\u00e7\u00e3o de Cura Menor",
+                "descricao": "Frasco contendo um cordial vermelho que restaura uma pequena quantidade de vida quando ingerido.",
+                "quantidade": 1
+            }
+        ]
+    },
+    "magias": [
+        {
+            "nome": "Luz",
+            "nivel": 0,
+            "tipo": "truque",
+            "custo_mana": 0,
+            "descricao": "Envolve um pequeno objeto em brilho cont\u00ednuo; \u00fatil para iluminar ambientes escuros."
+        },
+        {
+            "nome": "M\u00e3os M\u00e1gicas",
+            "nivel": 0,
+            "tipo": "truque",
+            "custo_mana": 0,
+            "descricao": "Cria uma m\u00e3o espectral que pode manipular objetos leves \u00e0 dist\u00e2ncia."
+        },
+        {
+            "nome": "Prestidigita\u00e7\u00e3o",
+            "nivel": 0,
+            "tipo": "truque",
+            "custo_mana": 0,
+            "descricao": "Pequenos truques utilit\u00e1rios \u2014 limpar, acender uma vela, resfriar um gole, etc."
+        },
+        {
+            "nome": "M\u00edsseis M\u00e1gicos",
+            "nivel": 1,
+            "tipo": "feiti\u00e7o",
+            "custo_mana": 6,
+            "descricao": "Proj\u00e9teis de energia que acertam automaticamente alvos, ideal para iniciantes em combate."
+        },
+        {
+            "nome": "Escudo",
+            "nivel": 1,
+            "tipo": "feiti\u00e7o",
+            "custo_mana": 6,
+            "descricao": "Barreira arcana instant\u00e2nea que aumenta temporariamente a defesa contra ataques."
+        },
+        {
+            "nome": "Detectar Magia",
+            "nivel": 1,
+            "tipo": "feiti\u00e7o",
+            "custo_mana": 6,
+            "descricao": "Permite perceber auras m\u00e1gicas e identificar a presen\u00e7a de magia em objetos e \u00e1reas pr\u00f3ximas."
+        },
+        {
+            "nome": "Sono",
+            "nivel": 1,
+            "tipo": "feiti\u00e7o",
+            "custo_mana": 6,
+            "descricao": "Induz um descanso m\u00e1gico em criaturas de pouca resist\u00eancia, \u00fatil para evitar conflitos."
+        }
+    ],
+    "status": [],
+    "spell_slots": {
+        "1": {
+            "total": 2,
+            "usado": 0
+        }
+    }
+}

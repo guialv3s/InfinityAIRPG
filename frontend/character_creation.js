@@ -30,9 +30,16 @@ let pointsRemaining = 27;
 let saValues = { for: 8, des: 8, con: 8, int: 8, sab: 8, car: 8 };
 let saSelections = { for: null, des: null, con: null, int: null, sab: null, car: null };
 
+// Export functions for Shared Modal
+window.initCreationTabs = initCreationTabs;
+window.initAttributeSystem = initAttributeSystem;
+
+// Initialize ONLY if modal exists in DOM (Legacy/First Load support)
 document.addEventListener('DOMContentLoaded', () => {
-    initCreationTabs();
-    initAttributeSystem();
+    if (document.getElementById('creation-modal')) {
+        initCreationTabs();
+        initAttributeSystem();
+    }
 });
 
 // --- Tabs ---

@@ -21,17 +21,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const overlay = document.getElementById('modal-overlay');
     const closeButtons = document.querySelectorAll('.close-modal');
 
-    // --- Helpers ---
-    function openModal(modal) {
-        if (overlay) overlay.classList.remove('hidden');
-        if (modal) modal.classList.remove('hidden');
-    }
-
-    function closeModal() {
-        if (overlay) overlay.classList.add('hidden');
-        if (loginModal) loginModal.classList.add('hidden');
-        if (registerModal) registerModal.classList.add('hidden');
-    }
+    // Initialize shared modal system
+    initModalSystem();
 
     // --- Init ---
     // Check Auth is defined in auth.js (make sure auth.js is loaded first or defer handles order)
@@ -50,8 +41,8 @@ document.addEventListener('DOMContentLoaded', () => {
     // --- Event Listeners ---
 
     // Modals
-    if (overlay) overlay.addEventListener('click', closeModal);
-    closeButtons.forEach(btn => btn.addEventListener('click', closeModal));
+    if (overlay) overlay.addEventListener('click', closeAllModals);
+    closeButtons.forEach(btn => btn.addEventListener('click', closeAllModals));
 
     // Play Button
     if (landingPlayBtn) {
@@ -76,7 +67,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (showRegisterLink) {
         showRegisterLink.addEventListener('click', (e) => {
             e.preventDefault();
-            closeModal(); // Hide all
+            closeAllModals(); // Hide all
             openModal(registerModal);
         });
     }
@@ -85,7 +76,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (showLoginLink) {
         showLoginLink.addEventListener('click', (e) => {
             e.preventDefault();
-            closeModal(); // Hide all
+            closeAllModals(); // Hide all
             openModal(loginModal);
         });
     }

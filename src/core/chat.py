@@ -116,7 +116,8 @@ def process_message(user_message: str, user_id: int, campaign_id: str) -> str:
             "1. NÃO RETORNE A CHAVE 'atributos' NO JSON. Se você retornar 'atributos', os dados do usuário serão apagados. Retorne APENAS 'inventario' e 'magias'.\n"
             "2. UTILIZE a 'historia' e o 'tema' para criar o item inicial único e definir o cenário.\n"
             "3. CALCULE 'vida_maxima', 'vida_atual', 'mana_maxima', 'mana_atual' baseados nos atributos e classe (Ex: Alta CON = Mais vida).\n"
-            "4. GERE uma lista de 'itens' e 'magias' (se aplicável) condizentes com o personagem.\n"
+            "4. REGRA RÍGIDA DE MANA: Se o tema NÃO for Fantasia, RPG ou explicitamente Mágico, 'mana_maxima' e 'mana_atual' DEVEM SER 0. NÃO CRIE MAGIAS NESTE CASO.\n"
+            "5. GERE uma lista de 'itens' e 'magias' (se aplicável) condizentes com o personagem.\n"
             "\n"
             "📋 REGRA OURO DE JSON (CRÍTICO):\n"
             "- TODA ação que muda o estado (magia, dano, item, ouro, spell slots) EXIGE JSON.\n"
@@ -279,6 +280,64 @@ def process_message(user_message: str, user_id: int, campaign_id: str) -> str:
             player["inventario"]["vida_atual"] = new_hp
             save_player(user_id, player, campaign_id)
             print(f"BACKUP: Detected HP statement - updated to {new_hp}")
+
+    # Backup Detection: New Items (if AI forgot JSON)
+    # Match: "recebe [Item]", "adquire [Item]", "ganha [Item]", "pega [Item]"
+    # Avoid duplicate matches if JSON already handled it (Checking history/state is hard, but we can prevent dupes by checking inventory)
+    item_matches = re.findall(r"(?:recebe|adquire|ganha|pega|encontra)\s+(?:um|uma|o|a)?\s*([A-ZÀ-Ú][a-zA-ZÀ-Ú\s]+?)(?:[\.,]|$)", assistant_message)
+    if item_matches:
+        player = load_player(user_id, campaign_id)
+        if player:
+            inventory = player.get("inventario", {})
+            items = inventory.get("itens", [])
+            current_names = [i.get("nome", "") if isinstance(i, dict) else i for i in items]
+            
+            changes = False
+            for item_name in item_matches:
+                item_name = item_name.strip()
+                # Simple heuristic: Item names usually aren't super long sentences.
+                if len(item_name) > 30 or len(item_name) < 3: continue
+                # Skip if already exists (fuzzy check?)
+                if any(item_name.lower() in n.lower() for n in current_names): continue
+                
+                # Add Item
+                new_item = {"nome": item_name, "quantidade": 1, "descricao": "Item detectado via narrativa."}
+                
+                # Inject Buffs (implicit)
+                from .player import inject_implicit_buffs
+                dummy_list = inject_implicit_buffs([new_item], player.get("classe", ""))
+                
+                items.append(dummy_list[0])
+                changes = True
+                print(f"BACKUP: Detected new item via narrative: {item_name}")
+
+            if changes:
+                inventory["itens"] = items
+                player["inventario"] = inventory
+                save_player(user_id, player, campaign_id)
+
+    # Backup Detection: New Spells
+    # Match: "aprende a magia [Magia]", "recebe a magia [Magia]"
+    spell_matches = re.findall(r"(?:aprende|recebe|descobre)\s+(?:a magia|o feitiço)\s*([A-ZÀ-Ú][a-zA-ZÀ-Ú\s]+?)(?:[\.,]|$)", assistant_message)
+    if spell_matches:
+        player = load_player(user_id, campaign_id)
+        if player:
+            magias = player.get("magias", [])
+            current_spells = [m.get("nome", "").lower() for m in magias]
+            
+            changes = False
+            for spell_name in spell_matches:
+                spell_name = spell_name.strip()
+                if len(spell_name) > 30 or len(spell_name) < 3: continue
+                if spell_name.lower() in current_spells: continue
+                
+                magias.append({"nome": spell_name, "nivel": 1, "custo_mana": 10, "descricao": "Magia aprendida na aventura."})
+                changes = True
+                print(f"BACKUP: Detected new spell via narrative: {spell_name}")
+            
+            if changes:
+                player["magias"] = magias
+                save_player(user_id, player, campaign_id)
 
     return resposta_limpa.strip()
 
